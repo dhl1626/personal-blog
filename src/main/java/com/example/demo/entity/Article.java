@@ -1,0 +1,58 @@
+package com.example.demo.entity; // 改成你的包名
+
+import jakarta.persistence.*; 
+
+@Entity
+@Table(name = "articles") // 可选：指定表名，默认为类名小
+public class Article {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100) // 非空，长度100
+    private String title;
+    
+    @Column(columnDefinition = "TEXT") // 大文本
+    private String content;
+    
+    @Column(nullable = false, length = 50)
+    private String author;
+
+    // ✅ 新增：无参构造函数（必须！）
+    public Article() {}
+
+    public Article(String title, String content, String author) {
+        this.title = title;
+        this.content = content;
+        this.author = author;
+    }
+
+    // 构造方法（IDEA：右键 → Generate → Constructor）
+    public Article(Long id, String title, String content, String author) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.author = author;
+    }
+
+    // Getter（IDEA：右键 → Generate → Getter）
+    public Long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getContent() { return content; }
+    public String getAuthor() { return author; }
+
+    // ===== Setter（新增！必须添加）=====
+    public void setId(Long id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setContent(String content) { this.content = content; }
+    public void setAuthor(String author) { this.author = author; }
+
+    // 安全认证
+    @ManyToOne
+    @JoinColumn(name = "user_id") // 数据库外键字段名
+    private User authorUser; // 关联的用户
+
+    // 生成getter/setter
+    public User getAuthorUser() { return authorUser; }
+    public void setAuthorUser(User authorUser) { this.authorUser = authorUser; }
+}
