@@ -61,6 +61,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- 新增PostgreSQL（Render生产环境用） -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 		<!-- Spring Security核心 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

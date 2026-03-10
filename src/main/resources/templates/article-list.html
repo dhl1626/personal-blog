@@ -57,7 +57,10 @@
                 </a>
             </h5>
             <p class="card-text" th:text="${article.content}">内容</p>
-            <small class="text-muted" th:text="'作者：' + ${article.author}">作者</small>
+            <small class="text-muted d-block mt-2">
+                👤 作者：<span th:text="${article.author} ?: '匿名'">作者</span> | 
+                📅 <span th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd HH:mm') : '暂无时间'}">时间</span>
+            </small>
         </div>
     </div>
     

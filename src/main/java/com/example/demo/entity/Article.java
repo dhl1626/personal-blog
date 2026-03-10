@@ -1,6 +1,7 @@
 package com.example.demo.entity; // 改成你的包名
 
 import jakarta.persistence.*; 
+import java.util.Date;
 
 @Entity
 @Table(name = "articles") // 可选：指定表名，默认为类名小
@@ -55,4 +56,14 @@ public class Article {
     // 生成getter/setter
     public User getAuthorUser() { return authorUser; }
     public void setAuthorUser(User authorUser) { this.authorUser = authorUser; }
+
+    private Date createTime;
+
+    public Date getCreateTime() { // 方法名必须是 get + 首字母大写
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
 }
