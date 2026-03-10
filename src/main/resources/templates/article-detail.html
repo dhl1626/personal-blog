@@ -2,24 +2,88 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${article.title}">文章详情</title>
+    <title th:text="${article.title} + ' - 博客详情'">文章详情</title>
+    
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- 👇 新增：GitHub Markdown 样式库 (让渲染出的 HTML 好看) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    
+    <style>
+        /* 自定义一些细节样式 */
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+            background-color: #fff; /* 确保背景是白色，防止透明导致阅读困难 */
+            border: 1px solid #dee2e6; /* 加一个淡淡的边框 */
+            border-radius: 6px;
+        }
+
+        /* 响应式调整：手机上减少内边距 */
+        @media (max-width: 767px) {
+            .markdown-body {
+                padding: 15px;
+            }
+        }
+        
+        /* 代码块横向滚动 */
+        .markdown-body pre {
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            padding: 16px;
+            overflow: auto;
+        }
+    </style>
 </head>
-<body class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h2 class="mb-0" th:text="${article.title}">标题</h2>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+    <!-- 返回按钮 -->
+    <div class="mb-3">
+        <a href="/articles" class="btn btn-outline-secondary btn-sm">⬅ 返回列表</a>
+        <!-- 可选：如果是作者本人，可以显示编辑按钮 (需要后端传递 isAuthor 变量) -->
+        <!-- <a th:if="${isAuthor}" th:href="@{/article/edit/{id}(id=${article.id})}" class="btn btn-warning btn-sm float-end">✏️ 编辑</a> -->
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white py-3">
+            <h2 class="mb-0 fw-bold" th:text="${article.title}">文章标题</h2>
         </div>
-        <div class="card-body">
-            <div class="mb-3 p-3 bg-light rounded">
-                <p class="mb-1" th:text="${article.content}">内容</p>
+        
+        <div class="card-body p-0"> <!-- p-0 移除默认 padding，让 markdown-body 自己控制 -->
+            
+            <!-- 文章元信息 -->
+            <div class="p-3 border-bottom bg-light">
+                <small class="text-muted">
+                    <span class="me-3">👤 作者：<strong th:text="${article.author}">作者</strong></span>
+                    <span class="me-3">📅 时间：<span th:text="${#dates.format(article.createTime, 'yyyy-MM-dd HH:mm')}">时间</span></span>
+                    <span>🔖 ID: <span th:text="${article.id}">ID</span></span>
+                </small>
             </div>
-            <small class="text-muted d-block mt-2">
-                👤 作者：<span th:text="${article.author}">作者</span> | 
-                🔖 ID：<span th:text="${article.id}">ID</span>
-            </small>
+
+            <!-- 👇 核心修改区域 -->
+            <!-- 1. 添加 class="markdown-body" 以应用 GitHub 风格样式 -->
+            <!-- 2. 使用 th:utext 渲染 HTML，而不是 th:text -->
+            <!-- 3. 数据源改为 article.htmlContent (后端转好后的 HTML) -->
+            <div class="markdown-body" th:utext="${article.htmlContent}">
+                <!-- 如果 htmlContent 为空，这里会显示空白，确保后端已生成 HTML -->
+            </div>
+            <!-- 👆 核心修改区域结束 -->
+
         </div>
     </div>
-    <a href="/articles" class="btn btn-primary mt-3">⬅ 返回列表</a>
+    
+    <!-- 底部操作区 -->
+    <div class="mt-4 text-center">
+        <a href="/articles" class="btn btn-primary px-4">⬅ 返回列表</a>
+    </div>
+</div>
+
+<!-- Bootstrap JS (可选，如果需要下拉菜单等交互) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

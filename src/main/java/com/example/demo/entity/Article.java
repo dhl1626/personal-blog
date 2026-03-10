@@ -3,6 +3,8 @@ package com.example.demo.entity; // 改成你的包名
 import jakarta.persistence.*; 
 import java.util.Date;
 
+import com.example.demo.util.MarkdownUtils;
+
 @Entity
 @Table(name = "articles") // 可选：指定表名，默认为类名小
 public class Article {
@@ -18,6 +20,12 @@ public class Article {
     
     @Column(nullable = false, length = 50)
     private String author;
+
+    // 【新增】原始 Markdown 内容
+    private String M_content;
+
+    // 【新增】渲染后的 HTML 内容 (可以是大文本类型 TEXT/LONGTEXT)
+    private String htmlContent; 
 
     // ✅ 新增：无参构造函数（必须！）
     public Article() {}
@@ -66,4 +74,15 @@ public class Article {
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
+
+    // 生成 Markdown的Getter 和 Setter (或者用 @Data)
+    public String getMContent() { return M_content; }
+    public void setMContent(String M_content) { 
+        this.M_content = M_content;
+        // 保存时自动转换 HTML
+        this.htmlContent = MarkdownUtils.markdownToHtml(M_content);
+    }
+    
+    public String getHtmlContent() { return htmlContent; }
+    public void setHtmlContent(String htmlContent) { this.htmlContent = htmlContent; }
 }
