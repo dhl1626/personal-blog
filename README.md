@@ -1,8 +1,7 @@
 
 
 # 📝 个人博客系统 | Spring Boot 全栈实战项目  
-> **5天独立开发 · 安全认证 · 线上可访问 · 面试直通利器**  
-> ✨ 专为学生/求职者设计的轻量级高价值项目 | 代码即文档 | 15分钟部署上线  
+> **独立开发 · 安全认证 · 线上可访问**  
 
 ---
 
@@ -88,7 +87,7 @@ http://localhost:8080/articles
 
 ## 📂 项目结构  
 ```
-blog-system/
+Personal-Blog/
 ├── src/main/java/com/yourname/blog/
 │   ├── controller/      # BlogController, AuthController
 │   ├── service/         # UserService (含密码加密逻辑)
