@@ -1,82 +1,69 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.User;
-import com.example.demo.service.UserService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
+import com.example.demo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-// 移除类级别的 @RequestMapping("/auth") 
-// 原因：这会导致登录页路径变成 /auth/login，与 SecurityConfig 配置的 /login 不一致
-// 我们将把 /auth 前缀只加在注册相关方法上
 public class AuthController {
-    
-    private final UserService userService;
-    
-    public AuthController(UserService userService) {
-        this.userService = userService;
-    }
-    
-    // 显示注册页
-    // 显式添加 /auth/register 路径
-    @GetMapping("/auth/register")
-    public String showRegisterForm(Model model) {
-        model.addAttribute("user", new User());
-        return "register";
-    }
-    
-    // 处理注册
-    @PostMapping("/auth/register")
-    public String registerUser(
-            @Valid UserForm userForm, 
-            BindingResult result,
-            RedirectAttributes redirectAttrs) {
-        
-        if (result.hasErrors()) {
-            return "register";
-        }
-        
-        try {
-            userService.registerUser(
-                userForm.getUsername(), 
-                userForm.getPassword(), 
-                userForm.getNickname()
-            );
-            redirectAttrs.addFlashAttribute("successMsg", "注册成功！请登录");
-            return "redirect:/login";
-        } catch (Exception e) {
-            redirectAttrs.addFlashAttribute("errorMsg", e.getMessage());
-            return "redirect:/auth/register";
-        }
-    }
-    
-    // 显示登录页（Security自动处理提交，只需提供页面）
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // 显示登录页面 (Spring Security 默认会拦截并跳转到此，但显式定义更清晰)
     @GetMapping("/login")
     public String loginPage() {
-        return "login";
+        return "login"; // 对应 templates/login.html
     }
-    
-    // 简化表单数据绑定（避免直接用User实体）
-    public static class UserForm {
-        @NotBlank(message = "用户名不能为空")
-        private String username;
-        @NotBlank(message = "密码不能为空")
-        private String password;
-        @NotBlank(message = "昵称不能为空")
-        private String nickname;
-        // Getter/Setter
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getNickname() { return nickname; }
-        public void setNickname(String nickname) { this.nickname = nickname; }
+
+    // 显示注册页面
+    @GetMapping("/auth/register")
+    public String showRegisterForm() {
+        return "register"; // 对应 templates/register.html
+    }
+
+    // 处理注册提交
+    @PostMapping("/auth/register")
+    public String registerUser(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String confirmPassword,
+            Model model) {
+
+        // 1. 简单校验：用户名是否已存在
+        if (userRepository.findByUsername(username).isPresent()) {
+            model.addAttribute("error", "用户名已存在");
+            return "register"; // 返回注册页并显示错误
+        }
+
+        // 2. 校验密码一致性
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("error", "两次输入的密码不一致");
+            return "register";
+        }
+
+        // 3. 密码加密
+        String encodedPassword = passwordEncoder.encode(password);
+
+        // 4. 创建并保存用户
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(encodedPassword);
+        // 默认角色可以在 User 实体构造函数中设置，或在此处设置
+        // user.setRole("ROLE_USER"); 
+        
+        userRepository.save(user);
+
+        // 5. 注册成功，重定向到登录页
+        return "redirect:/login?registered=true";
     }
 }

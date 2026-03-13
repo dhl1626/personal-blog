@@ -54,6 +54,24 @@
             <h2 class="mb-0 fw-bold" th:text="${article.title}">文章标题</h2>
         </div>
         
+        <div class="mb-3">
+            <!-- 分类 -->
+            <span class="badge bg-primary me-2">
+                📂 <span th:text="${article.category?.name ?: '未分类'}">分类</span>
+            </span>
+            
+            <!-- 标签列表 -->
+            <span th:if="${article.tags != null and !article.tags.isEmpty()}">
+                <span th:each="tag : ${article.tags}" class="me-1">
+                    <a th:href="@{/articles?tag={name}(name=${tag.name})}" 
+                    class="badge bg-secondary text-decoration-none hover-badge"
+                    th:text="'#' + ${tag.name}">
+                    #标签
+                    </a>
+                </span>
+            </span>
+        </div>
+
         <div class="card-body p-0"> <!-- p-0 移除默认 padding，让 markdown-body 自己控制 -->
             
             <!-- 文章元信息 -->

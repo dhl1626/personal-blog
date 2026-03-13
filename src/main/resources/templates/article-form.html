@@ -42,6 +42,31 @@
                            th:value="${article != null} ? ${article.title} : ''">
                 </div>
 
+                <div class="row mb-3">
+                    <!-- 分类选择 -->
+                    <div class="col-md-6">
+                        <label for="category" class="form-label fw-bold">📂 分类</label>
+                        <select class="form-select" id="category" name="categoryId" required>
+                            <option value="" disabled selected>请选择分类</option>
+                            <!-- Thymeleaf 遍历后端传来的 categories 列表 -->
+                            <option th:each="cat : ${categories}" 
+                                    th:value="${cat.id}" 
+                                    th:text="${cat.name}">
+                                    分类名
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- 标签输入 -->
+                    <div class="col-md-6">
+                        <label for="tags" class="form-label fw-bold">🏷️ 标签</label>
+                        <input type="text" class="form-control" id="tags" name="tagNames" 
+                            placeholder="多个标签请用逗号分隔，如：Java,Spring,教程"
+                            th:value="${article != null and article.tags != null} ? ${#strings.listJoin(article.tags.![name], ',')} : ''">
+                        <div class="form-text">支持多个标签，用英文或中文逗号分隔。</div>
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label fw-bold">内容 (Markdown)</label>
                     

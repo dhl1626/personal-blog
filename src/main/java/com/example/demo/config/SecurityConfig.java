@@ -8,8 +8,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+// import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -17,22 +18,22 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity // 启用Security
 @RequiredArgsConstructor // Lombok自动生成构造器（若无Lombok，手写构造器）
 public class SecurityConfig {
-    
+
     private final UserRepository userRepository;
-    
+
     // 【关键1】密码加密器Bean（全局唯一，Security自动使用）
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
     // 【关键2】用户加载逻辑（登录时查数据库）
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByUsername(username)
-            .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
     }
-    
+
     // 【关键3】安全规则配置
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -52,7 +53,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             .csrf(csrf -> csrf.disable()); // 开发环境暂时关闭CSRF（面试可解释：生产环境会开启）
-        
+
         return http.build();
     }
 }

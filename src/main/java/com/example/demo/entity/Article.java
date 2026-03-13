@@ -1,7 +1,9 @@
 package com.example.demo.entity; // 改成你的包名
 
-import jakarta.persistence.*; 
+import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.example.demo.util.MarkdownUtils;
 
@@ -85,4 +87,47 @@ public class Article {
     
     public String getHtmlContent() { return htmlContent; }
     public void setHtmlContent(String htmlContent) { this.htmlContent = htmlContent; }
+
+    // 多对多关联标签
+    // cascade = CascadeType.PERSIST: 保存文章时，如果标签是新的，自动保存标签
+    // 注意：通常建议先手动管理标签的查找或创建，这里简化处理
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "article_tag",
+        joinColumns = @JoinColumn(name = "article_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<Tag> tags = new ArrayList<>();
+
+    // Getter, Setter...
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+        tag.getArticles().add(this);
+    }
+    
+    public void removeTag(Tag tag) {
+        this.tags.remove(tag);
+        tag.getArticles().remove(this);
+    }
+
+    // ---  新增：分类字段   ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id") // 对应数据库的外键列名
+    private Category category;
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }
