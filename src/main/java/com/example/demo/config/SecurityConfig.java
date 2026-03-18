@@ -18,7 +18,6 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
 
-    // 显式构造器注入（替代 Lombok @RequiredArgsConstructor）
     public SecurityConfig(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -38,18 +37,32 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/article/form", "/article/save").authenticated()
-                .requestMatchers("/", "/articles", "/article/**", "/css/**", "/js/**", "/login", "/auth/register").permitAll()
+                // 公开访问的资源
+                .requestMatchers("/", "/articles", "/article/list", "/article/tags", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/login", "/auth/register", "/auth/**").permitAll()
+                
+                // 需要登录才能访问的资源
+                .requestMatchers("/article/form", "/article/save", "/article/edit/**", "/article/delete/**").authenticated()
+                .requestMatchers("/article/my-blogs", "/article/comment/**").authenticated()
+                
+                // 管理员专属资源
+                .requestMatchers("/admin/**", "/role/**", "/permission/**").hasRole("ADMIN")
+                
+                // 其他所有请求需要登录
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/articles", true)
                 .permitAll()
+                .failureUrl("/login?error=true")
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/articles")
                 .permitAll()
+            )
+            .exceptionHandling(ex -> ex
+                .accessDeniedPage("/access-denied")
             )
             .csrf(csrf -> csrf.disable());
 

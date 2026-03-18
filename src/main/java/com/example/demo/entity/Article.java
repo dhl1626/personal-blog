@@ -48,6 +48,11 @@ public class Article {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    // 一对多：一篇文章有多个评论，按创建时间排序
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createTime ASC")
+    private List<Comment> comments = new ArrayList<>();
+
     public Article() {}
 
     public Article(String title, String content, String author) {
@@ -152,5 +157,23 @@ public class Article {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public void addComment(Comment comment) {
+        this.comments.add(comment);
+        comment.setArticle(this);
+    }
+
+    public void removeComment(Comment comment) {
+        this.comments.remove(comment);
+        comment.setArticle(null);
     }
 }

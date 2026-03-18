@@ -1,8 +1,13 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.User;
+import com.example.demo.entity.Role;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +23,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RoleService roleService;
 
     // 显示登录页面 (Spring Security 默认会拦截并跳转到此，但显式定义更清晰)
     @GetMapping("/login")
@@ -58,12 +66,64 @@ public class AuthController {
         User user = new User();
         user.setUsername(username);
         user.setPassword(encodedPassword);
-        // 默认角色可以在 User 实体构造函数中设置，或在此处设置
-        // user.setRole("ROLE_USER"); 
-        
         userRepository.save(user);
 
-        // 5. 注册成功，重定向到登录页
+        // 5. 分配默认角色（ROLE_USER）
+        Role userRole = roleService.getRoleByName("ROLE_USER");
+        if (userRole != null) {
+            user.addRole(userRole);
+            userRepository.save(user);
+        }
+
+        // 6. 注册成功，重定向到登录页
         return "redirect:/login?registered=true";
+    }
+
+    // ==================== 修改密码 ====================
+
+    // 显示修改密码页面
+    @GetMapping("/profile/change-password")
+    public String showChangePasswordForm() {
+        return "change-password";
+    }
+
+    // 处理修改密码提交
+    @PostMapping("/profile/change-password")
+    public String changePassword(
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmNewPassword,
+            Authentication authentication,
+            Model model) {
+
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        // 1. 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            model.addAttribute("error", "原密码错误");
+            return "change-password";
+        }
+
+        // 2. 验证新密码一致性
+        if (!newPassword.equals(confirmNewPassword)) {
+            model.addAttribute("error", "两次输入的新密码不一致");
+            return "change-password";
+        }
+
+        // 3. 验证新密码强度
+        if (newPassword.length() < 6) {
+            model.addAttribute("error", "密码长度至少为 6 位");
+            return "change-password";
+        }
+
+        // 4. 更新密码
+        String encodedNewPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedNewPassword);
+        userRepository.save(user);
+
+        // 5. 修改成功，重定向到首页
+        return "redirect:/profile/change-password?success=true";
     }
 }

@@ -1,13 +1,12 @@
-﻿<!DOCTYPE html>
-<!-- 1. 合并命名空间声明到最外层 html 标签 -->
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>博客列表</title>
+    <title>我的博客</title>
     <!-- 引入 Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 引入 Bootstrap Icons (为了显示图标) -->
+    <!-- 引入 Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
@@ -21,16 +20,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <!-- 未登录显示 -->
                     <li class="nav-item" sec:authorize="!isAuthenticated()">
                         <a class="nav-link" href="/login">🔑 登录</a>
                     </li>
                     <li class="nav-item" sec:authorize="!isAuthenticated()">
                         <a class="nav-link" href="/auth/register">会员注册</a>
-                    </li>
-                    <!-- 已登录显示 -->
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <span class="nav-link">👤 欢迎，<span sec:authentication="principal.username"></span></span>
                     </li>
                     <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -54,31 +48,35 @@
         </div>
     </nav>
 
-    <!-- 2. 【新增】操作结果提示区域 (必须放在列表上方) -->
-    <!-- 删除成功提示 -->
+    <!-- 操作结果提示 -->
     <div th:if="${param.msg}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:if="${param.msg[0] == 'saved'}">文章已成功保存！</span>
         <span th:if="${param.msg[0] == 'deleted'}">文章已成功删除！</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- 删除失败/无权限提示 -->
     <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <span th:if="${param.error[0] == 'forbidden'}">操作失败：您没有权限删除该文章，或文章不存在。</span>
+        <span th:if="${param.error[0] == 'forbidden'}">操作失败：您没有权限执行此操作。</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
     <!-- 页面标题和操作区 -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-primary"><i class="bi bi-journal-text me-2"></i>博客列表</h1>
-        <a href="/article/form" class="btn btn-success btn-lg" sec:authorize="isAuthenticated()">
+        <h1 class="text-primary"><i class="bi bi-person-circle me-2"></i>我的博客</h1>
+        <a href="/article/form" class="btn btn-success btn-lg">
             <i class="bi bi-pencil-square me-1"></i>写文章
         </a>
     </div>
 
-    <!-- 文章列表循环 -->
-    <!-- 如果列表为空，显示提示 -->
+    <!-- 统计信息 -->
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        你共发布了 <strong th:text="${#lists.size(articleList)}">0</strong> 篇博客
+    </div>
+
+    <!-- 文章列表 -->
     <div th:if="${#lists.isEmpty(articleList)}" class="alert alert-info text-center">
         <i class="bi bi-inbox me-2"></i>暂无文章，快去写一篇吧！
     </div>
@@ -87,51 +85,43 @@
         <div class="card-body">
             <h5 class="card-title">
                 <a th:href="@{/article/{id}(id=${article.id})}"
-                   class="text-decoration-none text-dark fw-bold fs-5 "
+                   class="text-decoration-none text-dark fw-bold fs-5"
                    th:text="${article.title}">
                     标题
                 </a>
             </h5>
-            <!-- 内容预览 (截取前 100 字，防止太长) -->
             <p class="card-text text-muted mt-2">
                 <span th:text="${#strings.abbreviate(article.content, 150)}">内容预览...</span>
             </p>
 
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <small class="text-muted">
-                    <i class="bi bi-person me-1"></i><span th:text="${article.author} ?: '匿名'">作者</span> &nbsp;|&nbsp;
-                    <i class="bi bi-clock me-1"></i><span th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd HH:mm') : '暂无时间'}">时间</span>
+                    <i class="bi bi-clock me-1"></i>
+                    <span th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd HH:mm') : '暂无时间'}">时间</span>
                 </small>
 
-                <!-- 3. 【核心修改】操作按钮区域 -->
                 <div class="btn-group">
-                    <!-- 编辑按钮 (假设只有作者能编辑，如果不是所有用户都能编辑，也可以加 th:if 判断) -->
                     <a th:href="@{/article/edit/{id}(id=${article.id})}"
                        class="btn btn-sm btn-outline-primary">
                        <i class="bi bi-pencil"></i> 编辑
                     </a>
-
-                    <!-- 删除按钮：仅当 文章作者 == 当前登录用户 时显示 -->
-                    <!-- 注意：这里使用了 #authentication.name 获取当前用户名 -->
-                    <!-- 必须加上 /delete 前缀，对应 Controller 中的 @GetMapping("/delete/{id}") -->
-                    <a th:if="${article.author == #authentication.name}"
-                        th:href="@{/article/delete/{id}(id=${article.id})}"
+                    <a th:href="@{/article/delete/{id}(id=${article.id})}"
                         class="btn btn-sm btn-outline-danger ms-1"
                         onclick="return confirm('⚠️ 确定要删除这篇文章吗？\n\n此操作不可恢复！');">
                         <i class="bi bi-trash"></i> 删除
                     </a>
-
-                    <!-- 如果不是作者，显示一个禁用的占位或提示 (可选) -->
-                    <span th:if="${article.author != #authentication.name}" class="ms-2 text-muted small fst-italic">
-                        (只读)
-                    </span>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="mt-4 text-center">
-        <a href="/" class="btn btn-secondary">🏠 返回首页</a>
+        <a href="/article/list" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-journal-text me-1"></i> 全部博客
+        </a>
+        <a href="/" class="btn btn-secondary">
+            <i class="bi bi-house me-1"></i> 返回首页
+        </a>
     </div>
 
     <!-- Bootstrap JS -->

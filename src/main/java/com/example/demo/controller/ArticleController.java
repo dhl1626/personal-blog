@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.entity.Article;
 import com.example.demo.entity.Category;
 import com.example.demo.service.ArticleService;
+import com.example.demo.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,9 @@ public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+    @Autowired
+    private CommentService commentService;
 
     // ================= 1. 显示表单页面 (新建 vs 编辑) =================
 
@@ -166,5 +170,47 @@ public class ArticleController {
     public String showTagsCloud(Model model) {
         model.addAttribute("hotTags", articleService.getHotTags(50));
         return "tags-cloud";
+    }
+
+    // ================= 6. 我的博客 =================
+    @GetMapping("/my-blogs")
+    public String myBlogs(Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String username = authentication.getName();
+        List<Article> articles = articleService.getArticlesByAuthor(username);
+        model.addAttribute("articleList", articles);
+
+        return "my-blogs";
+    }
+
+    // ================= 7. 保存评论 =================
+    @PostMapping("/{articleId}/comment/save")
+    public String saveComment(
+            @PathVariable Long articleId,
+            @RequestParam String content,
+            Authentication authentication) {
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        String username = authentication.getName();
+
+        // 简单的内容校验
+        if (content == null || content.trim().isEmpty()) {
+            return "redirect:/article/" + articleId + "?error=empty_comment";
+        }
+
+        try {
+            commentService.saveComment(articleId, content, username);
+        } catch (RuntimeException e) {
+            System.out.println("评论失败：" + e.getMessage());
+            return "redirect:/article/" + articleId + "?error=comment_failed";
+        }
+
+        return "redirect:/article/" + articleId + "?msg=comment_success";
     }
 }

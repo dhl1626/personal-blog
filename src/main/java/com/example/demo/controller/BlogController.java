@@ -1,36 +1,31 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Article;
-// import com.example.demo.entity.User; // 需要 User 实体类时取消注释
+import com.example.demo.entity.Comment;
+import com.example.demo.service.CommentService;
 import com.example.demo.repository.ArticleRepository;
-import com.example.demo.repository.UserRepository; // 需要 UserRepository 时取消注释
+import com.example.demo.repository.UserRepository;
 
-// import org.springframework.security.core.Authentication;
-// import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.lang.Nullable;
-// import org.springframework.web.bind.annotation.PostMapping;
-// import org.springframework.web.bind.annotation.RequestParam;
-// import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-@Controller // 注意：必须使用 @Controller 以返回视图名称，而非 @RestController
+@Controller
 public class BlogController {
 
-    // 注入 ArticleRepository
     private final ArticleRepository articleRepository;
-    
-    // 注入 UserRepository (当前被注释，需配合下方 saveArticle 逻辑使用)
-    // private final UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final CommentService commentService;
 
-    // 构造器注入
-    public BlogController(ArticleRepository articleRepository, UserRepository userRepository) {
+    public BlogController(ArticleRepository articleRepository, UserRepository userRepository, CommentService commentService) {
         this.articleRepository = articleRepository;
-        // this.userRepository = userRepository;
+        this.userRepository = userRepository;
+        this.commentService = commentService;
     }
 
     // 1. 列表页
@@ -43,12 +38,22 @@ public class BlogController {
 
     // 2. 详情页
     @GetMapping("/article/{id}")
-    public String articleDetail(@PathVariable @Nullable Long id, Model model) {
+    public String articleDetail(@PathVariable @Nullable Long id, Model model, Authentication authentication) {
         // findById 返回 Optional，处理不存在的情况
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
 
         model.addAttribute("article", article);
+        
+        // 加载评论列表
+        List<Comment> comments = commentService.getCommentsByArticle(id);
+        model.addAttribute("comments", comments);
+        
+        // 当前登录用户（用于显示评论表单）
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            model.addAttribute("currentUsername", authentication.getName());
+        }
+
         return "article-detail";
     }
 

@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails; 
+import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
-import java.util.Collections; // 用于简化列表操作
 
 @Entity
 @Table(name = "user")
@@ -28,6 +27,19 @@ public class User implements UserDetails{
     // 一对多：一个用户有多篇文章
     @OneToMany(mappedBy = "authorUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Article> articles = new ArrayList<>();
+
+    // 一对多：一个用户有多个评论
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    // 多对多：一个用户有多个角色
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_role",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles = new ArrayList<>();
 
     // 无参构造（JPA必需）
     public User() {}
@@ -51,12 +63,37 @@ public class User implements UserDetails{
     public void setNickname(String nickname) { this.nickname = nickname; }
     public List<Article> getArticles() { return articles; }
     public void setArticles(List<Article> articles) { this.articles = articles; }
+    public List<Comment> getComments() { return comments; }
+    public void setComments(List<Comment> comments) { this.comments = comments; }
+    public List<Role> getRoles() { return roles; }
+    public void setRoles(List<Role> roles) { this.roles = roles; }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+        role.getUsers().add(this);
+    }
+
+    public void removeRole(Role role) {
+        this.roles.remove(role);
+        role.getUsers().remove(this);
+    }
 
      @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 这里返回用户的角色/权限
-        // 假设您有一个 role 字段，或者暂时返回一个默认角色 "ROLE_USER"
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        // 返回用户的角色和权限
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        
+        // 添加角色
+        for (Role role : roles) {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+            
+            // 添加角色包含的权限
+            for (Permission permission : role.getPermissions()) {
+                authorities.add(new SimpleGrantedAuthority(permission.getName()));
+            }
+        }
+        
+        return authorities;
     }
 
     @Override
