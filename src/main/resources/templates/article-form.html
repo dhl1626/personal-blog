@@ -1,173 +1,162 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>✍️ 写新文章</title>
+    <title th:text="${isEdit} ? '✏️ 编辑文章' : '✍️ 写新文章'">写文章</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- 引入 Vditor 样式 -->
     <link rel="stylesheet" href="https://unpkg.com/vditor/dist/index.css" />
-    <!-- 引入 Vditor 脚本 -->
-    <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
     <style>
-        /* 调整编辑器高度，使其更舒适 */
         #vditor-editor {
-            min-height: 400px; 
+            min-height: 450px;
+            background-color: #fff;
         }
         /* 修复可能的样式冲突 */
-        .vditor-reset {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-        }
+        .vditor-reset { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
     </style>
 </head>
 <body class="container mt-5">
+
     <div class="card shadow">
-        <div class="card-header bg-success text-white">
-            <h3 class="mb-0">✍️ <span th:text="${article != null and article.id != null} ? '编辑文章' : '写新文章'">写新文章</span></h3>
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <span th:if="${isEdit}">✏️ 编辑文章</span>
+                <span th:unless="${isEdit}">✍️ 写新文章</span>
+            </h3>
+            <a href="/article/list" class="btn btn-sm btn-light text-success">← 返回列表</a>
         </div>
+        
         <div class="card-body">
-            <!-- 表单提交到 /article/save -->
             <form th:action="@{/article/save}" method="post">
                 
-                <!-- 如果是编辑模式，需要传入 ID -->
-                <input type="hidden" th:if="${article != null and article.id != null}" th:name="id" th:value="${article.id}">
+                <!-- 隐藏域：传递文章 ID (如果是编辑) -->
+                <input type="hidden" name="id" th:value="${article?.id}" />
 
+                <!-- 标题 -->
                 <div class="mb-3">
                     <label for="title" class="form-label fw-bold">标题</label>
                     <input type="text" 
-                           class="form-control" 
+                           class="form-control form-control-lg" 
                            id="title" 
                            name="title" 
                            required 
                            placeholder="输入文章标题"
-                           th:value="${article != null} ? ${article.title} : ''">
+                           th:value="${article?.title}">
                 </div>
 
                 <div class="row mb-3">
-                    <!-- 分类选择 -->
+                    <!-- 分类选择 (重点修复：增加 th:selected) -->
                     <div class="col-md-6">
-                        <label for="category" class="form-label fw-bold">📂 分类</label>
-                        <select class="form-select" id="category" name="categoryId" required>
-                            <option value="" disabled selected>请选择分类</option>
-                            <!-- Thymeleaf 遍历后端传来的 categories 列表 -->
+                        <label for="categoryId" class="form-label fw-bold">📂 分类</label>
+                        <select class="form-select" id="categoryId" name="categoryId" required>
+                            <option value="" disabled>请选择分类</option>
+                            <!-- 
+                                逻辑：
+                                1. 遍历 categories
+                                2. 如果 article.categoryId 存在 且 等于当前 cat.id，则选中
+                                3. 使用 #strings.equals 防止 Long 和 Integer 类型不匹配
+                            -->
                             <option th:each="cat : ${categories}" 
                                     th:value="${cat.id}" 
-                                    th:text="${cat.name}">
+                                    th:text="${cat.name}"
+                                    th:selected="${article?.category != null and #strings.equals(article.category.id, cat.id)}">
                                     分类名
                             </option>
                         </select>
+                        <div class="form-text text-danger" th:if="${isEdit and (article == null or article.category == null)}">
+                            ⚠️ 警告：原文章分类数据丢失，请重新选择。
+                        </div>
                     </div>
 
                     <!-- 标签输入 -->
                     <div class="col-md-6">
-                        <label for="tags" class="form-label fw-bold">🏷️ 标签</label>
-                        <input type="text" class="form-control" id="tags" name="tagNames" 
+                        <label for="tagNames" class="form-label fw-bold">🏷️ 标签</label>
+                        <!-- 
+                           假设后端 article.tags 是一个 List<Tag> 对象，我们需要提取 name 并用逗号连接。
+                           如果后端直接存的是 tagNames 字符串，直接用 ${article.tagNames} 即可。
+                           这里做了兼容处理：优先取 tagNames 字符串，如果没有则尝试拼接 tags 列表。
+                        -->
+                        <input type="text" class="form-control" id="tagNames" name="tagNames" 
                             placeholder="多个标签请用逗号分隔，如：Java,Spring,教程"
-                            th:value="${article != null and article.tags != null} ? ${#strings.listJoin(article.tags.![name], ',')} : ''">
+                            th:value="${article != null and article.tags != null and !#lists.isEmpty(article.tags)} ? ${#strings.listJoin(article.tags.![name], ',')} : ''">
                         <div class="form-text">支持多个标签，用英文或中文逗号分隔。</div>
                     </div>
                 </div>
 
+                <!-- 内容区域 (重点修复：Vditor 初始化逻辑) -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">内容 (Markdown)</label>
                     
-                    <!-- 1. 原始的 textarea 隐藏起来，用于表单提交 -->
-                    <!-- 注意：name="content" 必须保留，否则后端收不到数据 -->
-                    <textarea id="content" name="content" style="display:none;"></textarea>
+                    <!-- 1. 隐藏的 textarea，用于表单提交 -->
+                    <!-- 注意：th:text 会把内容放入 textarea 内部，JS 会读取它 -->
+                    <textarea id="content" name="content" style="display:none;" th:text="${article?.content}"></textarea>
                     
                     <!-- 2. Vditor 的渲染容器 -->
                     <div id="vditor-editor"></div>
                     
-                    <div class="form-text text-muted">支持 Markdown 语法，支持代码高亮、表格、流程图。</div>
+                    <div class="form-text text-muted">支持 Markdown 语法，代码高亮，表格等。</div>
                 </div>
 
-                <div class="mb-3 alert alert-info d-flex align-items-center">
-                    <span class="me-2">👤 作者：</span>
+                <div class="mb-3 alert alert-light border d-flex align-items-center">
+                    <span class="me-2 text-primary">👤 作者：</span>
                     <strong th:text="${#authentication.name}">当前用户</strong>
-                    <span class="ms-2 text-muted small">(自动关联，不可修改)</span>
-                    <!-- 如果需要后端自动绑定作者，这里不需要 input 字段，Controller 里从 SecurityContext 获取即可 -->
+                    <span class="ms-2 text-muted small">(自动关联)</span>
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success px-4">💾 保存发布</button>
-                    <a href="/articles" class="btn btn-outline-secondary">❌ 取消</a>
+                    <button type="submit" class="btn btn-success px-4 btn-lg">
+                        <span th:text="${isEdit} ? '💾 保存修改' : '🚀 发布文章'">提交</span>
+                    </button>
+                    <a href="/article/list" class="btn btn-outline-secondary btn-lg">取消</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 初始化 Vditor 脚本 -->
+    <!-- 引入 Vditor 脚本 -->
+    <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
+    
     <script>
-        // 获取初始内容 (如果是编辑模式，Thymeleaf 会渲染出文章内容；如果是新建，则为空字符串)
-        // 注意：如果内容中包含单引号，可能需要转义，但 Thymeleaf 的 [[...]] 语法通常处理得较好
-        var initialContent = "[[${article != null and article.content != null} ? ${article.content} : '']]";
-        
-        // 如果初始内容是字面量的 'null' 或空，修正为空字符串
-        if (initialContent === 'null' || initialContent === '') {
-            initialContent = '';
-        }
+        document.addEventListener("DOMContentLoaded", function() {
+            // 【安全获取内容的方法】
+            // 直接从隐藏的 textarea 中读取 Thymeleaf 渲染好的值
+            // 这样可以避免 [[...]] 语法在处理多行 Markdown 特殊字符时的转义问题
+            var hiddenTextarea = document.getElementById('content');
+            var initialContent = hiddenTextarea.value || '';
 
-        var vditor = new Vditor('vditor-editor', {
-            height: 500,
-            mode: 'sv', // 'sv'(分屏预览), 'wysiwyg'(所见即所得), 'ir'(即时渲染)。推荐技术博客用 'sv' 或 'ir'
-            placeholder: '请输入 Markdown 内容...',
-            value: initialContent,
-            
-            // 缓存配置 (开发时可开启，生产环境建议关闭或谨慎使用)
-            cache: {
-                enable: false, 
-            },
+            console.log("编辑器初始化，内容长度:", initialContent.length);
 
-            // 预览配置
-            preview: {
-                theme: {
-                    current: 'light',
+            var vditor = new Vditor('vditor-editor', {
+                height: 480,
+                mode: 'sv', // 分屏预览模式
+                placeholder: '请输入 Markdown 内容...',
+                value: initialContent, // 设置初始值
+                
+                cache: { enable: false }, // 禁用缓存，防止编辑旧文时出现缓存干扰
+
+                preview: {
+                    theme: { current: 'light' },
+                    hljs: { enable: true, style: 'github' }
                 },
-                hljs: {
-                    enable: true,
-                    style: 'github', // 代码高亮风格
+
+                toolbar: [
+                    'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
+                    'list', 'ordered-list', 'check', 'quote', 'line', 'code', 'table', '|',
+                    'undo', 'redo', '|',
+                    'edit-mode', 'fullscreen', 'preview', 'both', '|', 'help'
+                ],
+
+                // 【关键】当用户在编辑器中输入时，同步更新隐藏 textarea 的值
+                input: function (value) {
+                    hiddenTextarea.value = value;
                 },
-                markdown: {
-                    setExt: true, // 允许自定义扩展
+
+                // 初始化完成后再次确保同步（以防万一）
+                after: function () {
+                    hiddenTextarea.value = vditor.getValue();
                 }
-            },
-
-            // 工具栏配置 (可按需精简)
-            toolbar: [
-                'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
-                'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
-                'quote', 'line', 'code', 'inline-code', 'insert-before', 'insert-after', '|',
-                'table', 'upload', '|',
-                'undo', 'redo', '|',
-                'edit-mode', 'content-theme', 'code-theme', 'fullscreen', 'preview', 'both', '|',
-                'help'
-            ],
-
-            // 【关键】当内容变化时，同步到隐藏的 textarea
-            input: function (value) {
-                document.getElementById('content').value = value;
-            },
-
-            // 初始化完成后也同步一次
-            after: function () {
-                document.getElementById('content').value = vditor.getValue();
-            },
-
-            // 图片上传配置 (可选，如果还没做后端上传接口，可以先注释掉或留空，此时只能粘贴网络图片链接)
-            /*
-            upload: {
-                url: '/api/upload/image', 
-                max: 5 * 1024 * 1024,
-                filename: function (name) {
-                    return name.replace(/[^(a-zA-Z0-9\u4e00-\u9fa5\.)]/g, '').replace(/[\?\\/:|<>\*\[\]\(\)\$%\{\}@~]/g, '').replace(/\s/g, '');
-                },
-                success: function (editor, msg) {
-                    // 根据后端返回格式处理
-                },
-                error: function () {
-                    alert('图片上传失败');
-                }
-            }
-            */
+            });
         });
     </script>
 </body>

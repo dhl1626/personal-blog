@@ -17,4 +17,9 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     
     // 根据标签查找文章 (因为是多对多，JPA 通常能自动推导，或者手动写 JPQL)
     List<Article> findByTagsContainingOrderByCreateTimeDesc(Tag tag);
+    
+    // 【新增】根据作者名查询文章，并按创建时间倒序排列（最新的在前面）
+    // Spring Data JPA 会自动解析这个方法名并生成 SQL: 
+    // SELECT * FROM article WHERE author = ? ORDER BY create_time DESC
+    List<Article> findByAuthorOrderByCreateTimeDesc(String author);
 }

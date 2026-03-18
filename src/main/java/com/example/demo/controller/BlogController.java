@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.lang.Nullable;
 // import org.springframework.web.bind.annotation.PostMapping;
 // import org.springframework.web.bind.annotation.RequestParam;
 // import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -42,7 +43,7 @@ public class BlogController {
 
     // 2. 详情页
     @GetMapping("/article/{id}")
-    public String articleDetail(@PathVariable Long id, Model model) {
+    public String articleDetail(@PathVariable @Nullable Long id, Model model) {
         // findById 返回 Optional，处理不存在的情况
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
