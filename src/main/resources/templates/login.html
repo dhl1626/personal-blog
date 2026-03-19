@@ -2,42 +2,342 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用户登录</title>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- 引入 Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- 引入自定义样式 -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* 背景装饰圆圈 */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        body::before {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+        }
+
+        body::after {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -3s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 30px); }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-card {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header h3 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            font-size: 1.6rem;
+        }
+
+        .login-header .subtitle {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .login-body {
+            padding: 2rem;
+            background: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            border: 2px solid #e8ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+            outline: none;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #bdc3c7;
+        }
+
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            color: #bdc3c7;
+            font-size: 1.1rem;
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .input-wrapper input:focus + .input-icon {
+            color: #667eea;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.875rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            margin-top: 0.5rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e8ecef;
+        }
+
+        .divider span {
+            position: relative;
+            background: white;
+            padding: 0 1rem;
+            color: #7f8c8d;
+            font-size: 0.875rem;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1.25rem;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+
+        .register-link a {
+            color: #667eea;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 1.25rem;
+            padding: 0.875rem 1rem;
+            font-size: 0.95rem;
+        }
+
+        .back-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.6rem 1.25rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            font-size: 0.9rem;
+        }
+
+        .back-home:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(-5px);
+        }
+
+        .back-home i {
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 576px) {
+            .login-header {
+                padding: 1.5rem;
+            }
+            
+            .login-header h3 {
+                font-size: 1.4rem;
+            }
+            
+            .login-body {
+                padding: 1.5rem;
+            }
+            
+            .back-home {
+                display: none;
+            }
+        }
+    </style>
 </head>
-<body class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3>🔒 用户登录</h3>
+<body>
+    <!-- 返回首页链接 -->
+    <a href="/" class="back-home">
+        <i class="bi bi-arrow-left"></i>返回首页
+    </a>
+
+    <div class="login-container">
+        <div class="card login-card">
+            <div class="login-header">
+                <h3><i class="bi bi-box-arrow-in-right me-2"></i>用户登录</h3>
+                <p class="subtitle mb-0">欢迎回来，请登录您的账户</p>
+            </div>
+            <div class="login-body">
+                <!-- Spring Security 错误/登出提示 -->
+                <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    <span>用户名或密码错误，请重试！</span>
                 </div>
-                <div class="card-body">
-                    <!-- Spring Security自动传的错误/登出提示 -->
-                    <div th:if="${param.error}" class="alert alert-danger">
-                        用户名或密码错误！
-                    </div>
-                    <div th:if="${param.logout}" class="alert alert-success">
-                        您已成功注销！
-                    </div>
-                    
-                    <form th:action="@{/login}" method="post">
-                        <div class="mb-3">
-                            <label class="form-label">用户名</label>
-                            <input type="text" name="username" class="form-control" required autofocus>
+                <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span>您已成功注销，期待再次相见！</span>
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="form-group">
+                        <label for="username"><i class="bi bi-person me-1"></i>用户名</label>
+                        <div class="input-wrapper">
+                            <input type="text" name="username" id="username" 
+                                   placeholder="请输入用户名" required autofocus>
+                            <i class="bi bi-person input-icon"></i>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">密码</label>
-                            <input type="password" name="password" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">🔑 登录</button>
-                    </form>
-                    <div class="text-center mt-3">
-                        还没有账号？<a href="/auth/register">立即注册</a>
                     </div>
+
+                    <div class="form-group">
+                        <label for="password"><i class="bi bi-lock me-1"></i>密码</label>
+                        <div class="input-wrapper">
+                            <input type="password" name="password" id="password" 
+                                   placeholder="请输入密码" required>
+                            <i class="bi bi-lock input-icon"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-login">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>立即登录
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>还没有账号？</span>
+                </div>
+
+                <div class="register-link">
+                    <a href="/auth/register">
+                        <i class="bi bi-person-plus me-1"></i>立即注册
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

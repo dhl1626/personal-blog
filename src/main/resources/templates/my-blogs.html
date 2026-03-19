@@ -3,126 +3,380 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的博客</title>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- 引入 Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- 引入 Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- 引入自定义样式 -->
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .page-title {
+            color: white;
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .stats-number {
+            font-size: 3rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stats-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .article-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .article-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .article-card:hover::before {
+            width: 100%;
+            opacity: 0.05;
+        }
+        
+        .article-title-link {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .article-title-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .article-title-link:hover {
+            color: #667eea;
+        }
+        
+        .article-title-link:hover::after {
+            width: 100%;
+        }
+        
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .meta-item i {
+            color: #667eea;
+        }
+        
+        .action-btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state i {
+            font-size: 5rem;
+            color: #bdc3c7;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .empty-state h4 {
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+        
+        .write-btn-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: none;
+        }
+        
+        .write-btn-float:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.5);
+            color: white;
+        }
+        
+        .btn-custom-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-custom-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-custom-outline {
+            background: white;
+            border: 2px solid #e8ecef;
+            color: #7f8c8d;
+        }
+        
+        .btn-custom-outline:hover {
+            background: #f8f9fa;
+            border-color: #bdc3c7;
+            color: #2c3e50;
+        }
+    </style>
 </head>
-<body class="container mt-5">
+<body>
 
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold text-primary" href="/articles">📝 博客系统</a>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/articles">
+                <i class="bi bi-journal-bookmark-fill me-2"></i>博客系统
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" href="/login">🔑 登录</a>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/articles"><i class="bi bi-journal-text me-1"></i>博客列表</a>
                     </li>
-                    <li class="nav-item" sec:authorize="!isAuthenticated()">
-                        <a class="nav-link" href="/auth/register">会员注册</a>
-                    </li>
-                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            👤 个人中心
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>个人中心
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/article/my-blogs">📖 我的博客</a></li>
-                            <li><a class="dropdown-item" href="/profile/change-password">🔑 修改密码</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                            <li><a class="dropdown-item active" href="/article/my-blogs"><i class="bi bi-file-text me-2"></i>我的博客</a></li>
+                            <li><a class="dropdown-item" href="/profile/change-password"><i class="bi bi-key me-2"></i>修改密码</a></li>
                             <li sec:authorize="hasRole('ADMIN')">
-                                <a class="dropdown-item" href="/admin">🔧 后台管理</a>
+                                <a class="dropdown-item" href="/admin"><i class="bi bi-shield-lock me-2"></i>后台管理</a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout">🚪 注销</a></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>注销</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a class="btn btn-success btn-sm ms-2" href="/article/form">✍️ 写文章</a>
+                    <li class="nav-item">
+                        <a class="btn btn-light btn-sm ms-2 px-4" href="/article/form">
+                            <i class="bi bi-pencil-square me-1"></i>写文章
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- 操作结果提示 -->
-    <div th:if="${param.msg}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <span th:if="${param.msg[0] == 'saved'}">文章已成功保存！</span>
-        <span th:if="${param.msg[0] == 'deleted'}">文章已成功删除！</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <span th:if="${param.error[0] == 'forbidden'}">操作失败：您没有权限执行此操作。</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-
-    <!-- 页面标题和操作区 -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-primary"><i class="bi bi-person-circle me-2"></i>我的博客</h1>
-        <a href="/article/form" class="btn btn-success btn-lg">
-            <i class="bi bi-pencil-square me-1"></i>写文章
-        </a>
-    </div>
-
-    <!-- 统计信息 -->
-    <div class="alert alert-info mb-4">
-        <i class="bi bi-info-circle me-2"></i>
-        你共发布了 <strong th:text="${#lists.size(articleList)}">0</strong> 篇博客
-    </div>
-
-    <!-- 文章列表 -->
-    <div th:if="${#lists.isEmpty(articleList)}" class="alert alert-info text-center">
-        <i class="bi bi-inbox me-2"></i>暂无文章，快去写一篇吧！
-    </div>
-
-    <div th:each="article : ${articleList}" class="card mb-3 shadow-sm border-0">
-        <div class="card-body">
-            <h5 class="card-title">
-                <a th:href="@{/article/{id}(id=${article.id})}"
-                   class="text-decoration-none text-dark fw-bold fs-5"
-                   th:text="${article.title}">
-                    标题
-                </a>
-            </h5>
-            <p class="card-text text-muted mt-2">
-                <span th:text="${#strings.abbreviate(article.content, 150)}">内容预览...</span>
-            </p>
-
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <small class="text-muted">
-                    <i class="bi bi-clock me-1"></i>
-                    <span th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd HH:mm') : '暂无时间'}">时间</span>
-                </small>
-
-                <div class="btn-group">
-                    <a th:href="@{/article/edit/{id}(id=${article.id})}"
-                       class="btn btn-sm btn-outline-primary">
-                       <i class="bi bi-pencil"></i> 编辑
-                    </a>
-                    <a th:href="@{/article/delete/{id}(id=${article.id})}"
-                        class="btn btn-sm btn-outline-danger ms-1"
-                        onclick="return confirm('⚠️ 确定要删除这篇文章吗？\n\n此操作不可恢复！');">
-                        <i class="bi bi-trash"></i> 删除
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="page-title"><i class="bi bi-person-circle me-2"></i>我的博客</h1>
+                    <p class="page-subtitle mb-0">管理你的文章，记录成长轨迹</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="/article/form" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-pencil-square me-2"></i>写文章
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 text-center">
-        <a href="/article/list" class="btn btn-outline-secondary me-2">
-            <i class="bi bi-journal-text me-1"></i> 全部博客
-        </a>
-        <a href="/" class="btn btn-secondary">
-            <i class="bi bi-house me-1"></i> 返回首页
-        </a>
+    <div class="container mb-5">
+        <!-- 操作提示 -->
+        <div th:if="${param.msg}" class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:if="${param.msg[0] == 'saved'}">文章已成功保存！</span>
+            <span th:if="${param.msg[0] == 'deleted'}">文章已成功删除！</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:if="${param.error[0] == 'forbidden'}">操作失败：您没有权限执行此操作。</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="stats-number" th:text="${#lists.size(articleList)}">0</div>
+                    <div class="stats-label">
+                        <i class="bi bi-file-text me-2"></i>已发布文章
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="/article/form" class="btn btn-light btn-lg px-4">
+                        <i class="bi bi-plus-circle me-2"></i>发布新文章
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文章列表 -->
+        <div th:if="${#lists.isEmpty(articleList)}" class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h4 class="mb-3">暂无文章</h4>
+            <p class="text-muted mb-4">快来发布你的第一篇文章吧！</p>
+            <a href="/article/form" class="btn btn-custom-primary btn-lg">
+                <i class="bi bi-pencil-square me-2"></i>立即创作
+            </a>
+        </div>
+
+        <div th:each="article : ${articleList}" class="article-card card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-9">
+                        <h5 class="mb-3">
+                            <a th:href="@{/article/{id}(id=${article.id})}"
+                               class="article-title-link"
+                               th:text="${article.title}">
+                                标题
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted mb-3" style="line-height: 1.8;">
+                            <span th:text="${#strings.abbreviate(article.content, 200)}">内容预览...</span>
+                        </p>
+                        <div class="article-meta">
+                            <span class="meta-item">
+                                <i class="bi bi-clock"></i>
+                                <span th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd HH:mm') : '暂无时间'}">时间</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-md-end mt-3 mt-md-0 d-flex flex-column justify-content-center align-items-md-end">
+                        <div class="action-btn-group">
+                            <a th:href="@{/article/{id}(id=${article.id})}"
+                               class="btn btn-outline-primary btn-sm"
+                               title="查看详情">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/article/edit/{id}(id=${article.id})}"
+                               class="btn btn-outline-primary btn-sm"
+                               title="编辑">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a th:href="@{/article/delete/{id}(id=${article.id})}"
+                               class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('⚠️ 确定要删除这篇文章吗？\n\n此操作不可恢复！');"
+                               title="删除">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="text-center mt-5">
+            <a href="/article/list" class="btn btn-custom-outline btn-lg px-4 me-2">
+                <i class="bi bi-journal-text me-2"></i>全部博客
+            </a>
+            <a href="/" class="btn btn-custom-outline btn-lg px-4">
+                <i class="bi bi-house-door me-2"></i>返回首页
+            </a>
+        </div>
     </div>
+
+    <!-- 悬浮写作按钮 -->
+    <a href="/article/form" class="write-btn-float" title="写文章">
+        <i class="bi bi-pencil-square"></i>
+    </a>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

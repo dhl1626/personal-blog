@@ -1,163 +1,495 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${isEdit} ? '✏️ 编辑文章' : '✍️ 写新文章'">写文章</title>
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- 引入 Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <!-- 引入 Vditor 样式 -->
     <link rel="stylesheet" href="https://unpkg.com/vditor/dist/index.css" />
+    <!-- 引入自定义样式 -->
+    <link href="/css/style.css" rel="stylesheet">
+    
     <style>
-        #vditor-editor {
-            min-height: 450px;
-            background-color: #fff;
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding-bottom: 3rem;
         }
-        /* 修复可能的样式冲突 */
-        .vditor-reset { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+        
+        .navbar-custom {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .page-title {
+            color: white;
+            font-weight: 800;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+        
+        .editor-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+            overflow: hidden;
+        }
+        
+        .editor-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-header h3 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 0;
+            font-size: 1.5rem;
+        }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .editor-body {
+            padding: 2rem;
+        }
+        
+        .form-label {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-label i {
+            color: #11998e;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid #e8ecef;
+            padding: 0.875rem 1.25rem;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #11998e;
+            box-shadow: 0 0 0 0.2rem rgba(17, 153, 142, 0.15);
+            outline: none;
+        }
+        
+        .form-control:hover, .form-select:hover {
+            border-color: #11998e;
+        }
+        
+        .title-input {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .author-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        
+        .author-info-text {
+            flex-grow: 1;
+        }
+        
+        .author-info-text strong {
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .author-info-text small {
+            color: #7f8c8d;
+        }
+        
+        #vditor-editor {
+            min-height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e8ecef;
+        }
+        
+        #vditor-editor:focus-within {
+            border-color: #11998e;
+            box-shadow: 0 0 0 0.2rem rgba(17, 153, 142, 0.15);
+        }
+        
+        .vditor-toolbar {
+            background: #f8f9fa !important;
+            border-bottom: 1px solid #e8ecef !important;
+        }
+        
+        .vditor-content {
+            background: white !important;
+        }
+        
+        .form-hint {
+            font-size: 0.875rem;
+            color: #7f8c8d;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-hint i {
+            color: #11998e;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #e8ecef;
+        }
+        
+        .btn-submit {
+            padding: 0.875rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.5);
+        }
+        
+        .btn-cancel {
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            background: white;
+            border: 2px solid #e8ecef;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-cancel:hover {
+            background: #f8f9fa;
+            border-color: #bdc3c7;
+            color: #2c3e50;
+        }
+        
+        .category-select, .tag-input {
+            position: relative;
+        }
+        
+        .category-select i, .tag-input i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bdc3c7;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 2rem 1rem;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .editor-body {
+                padding: 1.5rem 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-submit, .btn-cancel {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
-<body class="container mt-5">
+<body>
 
-    <div class="card shadow">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">
-                <span th:if="${isEdit}">✏️ 编辑文章</span>
-                <span th:unless="${isEdit}">✍️ 写新文章</span>
-            </h3>
-            <a href="/article/list" class="btn btn-sm btn-light text-success">← 返回列表</a>
-        </div>
-        
-        <div class="card-body">
-            <form th:action="@{/article/save}" method="post">
-                
-                <!-- 隐藏域：传递文章 ID (如果是编辑) -->
-                <input type="hidden" name="id" th:value="${article?.id}" />
-
-                <!-- 标题 -->
-                <div class="mb-3">
-                    <label for="title" class="form-label fw-bold">标题</label>
-                    <input type="text" 
-                           class="form-control form-control-lg" 
-                           id="title" 
-                           name="title" 
-                           required 
-                           placeholder="输入文章标题"
-                           th:value="${article?.title}">
-                </div>
-
-                <div class="row mb-3">
-                    <!-- 分类选择 (重点修复：增加 th:selected) -->
-                    <div class="col-md-6">
-                        <label for="categoryId" class="form-label fw-bold">📂 分类</label>
-                        <select class="form-select" id="categoryId" name="categoryId" required>
-                            <option value="" disabled>请选择分类</option>
-                            <!-- 
-                                逻辑：
-                                1. 遍历 categories
-                                2. 如果 article.categoryId 存在 且 等于当前 cat.id，则选中
-                                3. 使用 #strings.equals 防止 Long 和 Integer 类型不匹配
-                            -->
-                            <option th:each="cat : ${categories}" 
-                                    th:value="${cat.id}" 
-                                    th:text="${cat.name}"
-                                    th:selected="${article?.category != null and #strings.equals(article.category.id, cat.id)}">
-                                    分类名
-                            </option>
-                        </select>
-                        <div class="form-text text-danger" th:if="${isEdit and (article == null or article.category == null)}">
-                            ⚠️ 警告：原文章分类数据丢失，请重新选择。
-                        </div>
-                    </div>
-
-                    <!-- 标签输入 -->
-                    <div class="col-md-6">
-                        <label for="tagNames" class="form-label fw-bold">🏷️ 标签</label>
-                        <!-- 
-                           假设后端 article.tags 是一个 List<Tag> 对象，我们需要提取 name 并用逗号连接。
-                           如果后端直接存的是 tagNames 字符串，直接用 ${article.tagNames} 即可。
-                           这里做了兼容处理：优先取 tagNames 字符串，如果没有则尝试拼接 tags 列表。
-                        -->
-                        <input type="text" class="form-control" id="tagNames" name="tagNames" 
-                            placeholder="多个标签请用逗号分隔，如：Java,Spring,教程"
-                            th:value="${article != null and article.tags != null and !#lists.isEmpty(article.tags)} ? ${#strings.listJoin(article.tags.![name], ',')} : ''">
-                        <div class="form-text">支持多个标签，用英文或中文逗号分隔。</div>
-                    </div>
-                </div>
-
-                <!-- 内容区域 (重点修复：Vditor 初始化逻辑) -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">内容 (Markdown)</label>
-                    
-                    <!-- 1. 隐藏的 textarea，用于表单提交 -->
-                    <!-- 注意：th:text 会把内容放入 textarea 内部，JS 会读取它 -->
-                    <textarea id="content" name="content" style="display:none;" th:text="${article?.content}"></textarea>
-                    
-                    <!-- 2. Vditor 的渲染容器 -->
-                    <div id="vditor-editor"></div>
-                    
-                    <div class="form-text text-muted">支持 Markdown 语法，代码高亮，表格等。</div>
-                </div>
-
-                <div class="mb-3 alert alert-light border d-flex align-items-center">
-                    <span class="me-2 text-primary">👤 作者：</span>
-                    <strong th:text="${#authentication.name}">当前用户</strong>
-                    <span class="ms-2 text-muted small">(自动关联)</span>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success px-4 btn-lg">
-                        <span th:text="${isEdit} ? '💾 保存修改' : '🚀 发布文章'">提交</span>
-                    </button>
-                    <a href="/article/list" class="btn btn-outline-secondary btn-lg">取消</a>
-                </div>
-            </form>
+<!-- 顶部导航栏 -->
+<nav class="navbar navbar-dark navbar-custom">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/articles">
+            <i class="bi bi-journal-bookmark-fill me-2"></i>博客系统
+        </a>
+        <div class="d-flex">
+            <a href="/article/list" class="btn-back">
+                <i class="bi bi-arrow-left"></i>返回列表
+            </a>
         </div>
     </div>
+</nav>
 
-    <!-- 引入 Vditor 脚本 -->
-    <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // 【安全获取内容的方法】
-            // 直接从隐藏的 textarea 中读取 Thymeleaf 渲染好的值
-            // 这样可以避免 [[...]] 语法在处理多行 Markdown 特殊字符时的转义问题
-            var hiddenTextarea = document.getElementById('content');
-            var initialContent = hiddenTextarea.value || '';
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">
+                    <span th:if="${isEdit}"><i class="bi bi-pencil-square me-2"></i>编辑文章</span>
+                    <span th:unless="${isEdit}"><i class="bi bi-journal-plus me-2"></i>写新文章</span>
+                </h1>
+                <p class="page-subtitle mb-0">
+                    <span th:if="${isEdit}">修改文章内容，保存更改</span>
+                    <span th:unless="${isEdit}">分享你的知识与见解</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
-            console.log("编辑器初始化，内容长度:", initialContent.length);
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="editor-card">
+                <div class="editor-body">
+                    <form th:action="@{/article/save}" method="post">
+                        <!-- 隐藏域：传递文章 ID (如果是编辑) -->
+                        <input type="hidden" name="id" th:value="${article?.id}" />
 
-            var vditor = new Vditor('vditor-editor', {
-                height: 480,
-                mode: 'sv', // 分屏预览模式
-                placeholder: '请输入 Markdown 内容...',
-                value: initialContent, // 设置初始值
-                
-                cache: { enable: false }, // 禁用缓存，防止编辑旧文时出现缓存干扰
+                        <!-- 标题 -->
+                        <div class="mb-4">
+                            <label for="title" class="form-label">
+                                <i class="bi bi-card-heading"></i>
+                                <span>文章标题</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control title-input"
+                                   id="title"
+                                   name="title"
+                                   required
+                                   placeholder="请输入文章标题..."
+                                   th:value="${article?.title}">
+                        </div>
 
-                preview: {
-                    theme: { current: 'light' },
-                    hljs: { enable: true, style: 'github' }
-                },
+                        <div class="row mb-4">
+                            <!-- 分类选择 -->
+                            <div class="col-md-6">
+                                <label for="categoryId" class="form-label">
+                                    <i class="bi bi-folder"></i>
+                                    <span>文章分类</span>
+                                </label>
+                                <div class="category-select">
+                                    <select class="form-select" id="categoryId" name="categoryId" required>
+                                        <option value="" disabled>请选择分类</option>
+                                        <option th:each="cat : ${categories}"
+                                                th:value="${cat.id}"
+                                                th:text="${cat.name}"
+                                                th:selected="${article?.category != null and #strings.equals(article.category.id, cat.id)}">
+                                        </option>
+                                    </select>
+                                    <i class="bi bi-chevron-down"></i>
+                                </div>
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span th:if="${isEdit and (article == null or article.category == null)}">
+                                        ⚠️ 警告：原文章分类数据丢失，请重新选择。
+                                    </span>
+                                    <span th:unless="${isEdit and (article == null or article.category == null)}">
+                                        选择最适合你文章的分类
+                                    </span>
+                                </div>
+                            </div>
 
-                toolbar: [
-                    'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
-                    'list', 'ordered-list', 'check', 'quote', 'line', 'code', 'table', '|',
-                    'undo', 'redo', '|',
-                    'edit-mode', 'fullscreen', 'preview', 'both', '|', 'help'
-                ],
+                            <!-- 标签输入 -->
+                            <div class="col-md-6">
+                                <label for="tagNames" class="form-label">
+                                    <i class="bi bi-hash"></i>
+                                    <span>标签</span>
+                                </label>
+                                <div class="tag-input">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="tagNames" 
+                                           name="tagNames"
+                                           placeholder="Java, Spring, 教程"
+                                           th:value="${article != null and article.tags != null and !#lists.isEmpty(article.tags)} ? ${#strings.listJoin(article.tags.![name], ',')} : ''">
+                                    <i class="bi bi-tags"></i>
+                                </div>
+                                <div class="form-hint">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span>多个标签请用逗号分隔，便于读者查找</span>
+                                </div>
+                            </div>
+                        </div>
 
-                // 【关键】当用户在编辑器中输入时，同步更新隐藏 textarea 的值
-                input: function (value) {
-                    hiddenTextarea.value = value;
-                },
+                        <!-- 作者信息 -->
+                        <div class="author-info">
+                            <div class="author-avatar">
+                                <span th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 1))}">U</span>
+                            </div>
+                            <div class="author-info-text">
+                                <div>
+                                    <strong th:text="${#authentication.name}">当前用户</strong>
+                                </div>
+                                <small>
+                                    <i class="bi bi-check-circle me-1"></i>自动关联作者
+                                </small>
+                            </div>
+                        </div>
 
-                // 初始化完成后再次确保同步（以防万一）
-                after: function () {
-                    hiddenTextarea.value = vditor.getValue();
-                }
-            });
+                        <!-- 内容区域 -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-file-text"></i>
+                                <span>文章内容</span>
+                            </label>
+
+                            <!-- 隐藏的 textarea，用于表单提交 -->
+                            <textarea id="content" name="content" style="display:none;" th:text="${article?.content}"></textarea>
+
+                            <!-- Vditor 编辑器 -->
+                            <div id="vditor-editor"></div>
+
+                            <div class="form-hint">
+                                <i class="bi bi-markdown"></i>
+                                <span>支持 Markdown 语法，代码高亮，表格等功能</span>
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="action-buttons">
+                            <button type="submit" class="btn-submit">
+                                <i class="bi bi-check-circle"></i>
+                                <span th:if="${isEdit}">保存修改</span>
+                                <span th:unless="${isEdit}">发布文章</span>
+                            </button>
+                            <a href="/article/list" class="btn-cancel">
+                                <i class="bi bi-x-circle"></i>
+                                <span>取消</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入 Vditor 脚本 -->
+<script src="https://unpkg.com/vditor/dist/index.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 从隐藏的 textarea 读取内容
+        var hiddenTextarea = document.getElementById('content');
+        var initialContent = hiddenTextarea.value || '';
+
+        console.log("编辑器初始化，内容长度:", initialContent.length);
+
+        var vditor = new Vditor('vditor-editor', {
+            height: 520,
+            mode: 'sv', // 分屏预览模式
+            placeholder: '开始创作你的文章吧... 支持 Markdown 语法',
+            value: initialContent,
+            cache: { enable: false },
+            preview: {
+                theme: { current: 'light' },
+                hljs: { enable: true, style: 'github' }
+            },
+            toolbar: [
+                'emoji', 'headings', 'bold', 'italic', 'strike', 'link', '|',
+                'list', 'ordered-list', 'check', 'quote', 'line', 'code', 'table', '|',
+                'undo', 'redo', '|',
+                'edit-mode', 'fullscreen', 'preview', 'both', '|', 'help'
+            ],
+            input: function (value) {
+                hiddenTextarea.value = value;
+            },
+            after: function () {
+                hiddenTextarea.value = vditor.getValue();
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>

@@ -3,201 +3,502 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${article.title} + ' - 博客详情'">文章详情</title>
 
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- 👇 新增：GitHub Markdown 样式库 (让渲染出的 HTML 好看) -->
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- GitHub Markdown 样式库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css">
+    <!-- 引入自定义样式 -->
+    <link href="/css/style.css" rel="stylesheet">
 
     <style>
-        /* 自定义一些细节样式 */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .article-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 0 4rem;
+            margin-bottom: -3rem;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .article-title {
+            color: white;
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.3;
+        }
+        
+        .article-meta-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+        
+        .meta-item i {
+            color: #667eea;
+        }
+        
+        .meta-item strong {
+            color: #2c3e50;
+        }
+        
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+        
+        .badge-category {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .badge-tag {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .badge-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .article-content-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+            overflow: hidden;
+        }
+        
         .markdown-body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 45px;
-            background-color: #fff; /* 确保背景是白色，防止透明导致阅读困难 */
-            border: 1px solid #dee2e6; /* 加一个淡淡的边框 */
+            font-family: 'Merriweather', serif;
+            line-height: 1.9;
+            color: #2c3e50;
+        }
+        
+        .markdown-body h1, .markdown-body h2, .markdown-body h3, 
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 2em;
+            margin-bottom: 1em;
+        }
+        
+        .markdown-body h1 {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5em;
+        }
+        
+        .markdown-body h2 {
+            border-bottom: 2px solid #e8ecef;
+            padding-bottom: 0.5em;
+        }
+        
+        .markdown-body p {
+            margin-bottom: 1.5em;
+            font-size: 1.05rem;
+        }
+        
+        .markdown-body code {
+            background: #f6f8fa;
+            padding: 0.2em 0.4em;
             border-radius: 6px;
+            font-size: 0.9em;
         }
-
-        /* 响应式调整：手机上减少内边距 */
-        @media (max-width: 767px) {
-            .markdown-body {
-                padding: 15px;
-            }
-        }
-
-        /* 代码块横向滚动 */
+        
         .markdown-body pre {
-            background-color: #f6f8fa;
-            border-radius: 6px;
-            padding: 16px;
-            overflow: auto;
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
         }
-
-        /* 评论区域样式 */
+        
+        .markdown-body pre code {
+            background: transparent;
+            padding: 0;
+            color: #f8f8f2;
+        }
+        
+        .markdown-body blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 1.5rem;
+            color: #7f8c8d;
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .markdown-body table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .comments-section {
+            margin-top: 2rem;
+        }
+        
+        .comments-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+            overflow: hidden;
+        }
+        
         .comment-item {
-            border-bottom: 1px solid #eee;
-            padding: 15px 0;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid #e8ecef;
+            transition: all 0.3s ease;
         }
+        
         .comment-item:last-child {
             border-bottom: none;
         }
+        
+        .comment-item:hover {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
         .comment-avatar {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background-color: #0d6efd;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            flex-shrink: 0;
         }
-        .comment-meta {
-            font-size: 0.875rem;
-            color: #6c757d;
+        
+        .comment-author {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.05rem;
+        }
+        
+        .comment-time {
+            color: #bdc3c7;
+            font-size: 0.85rem;
+        }
+        
+        .comment-content {
+            color: #2c3e50;
+            line-height: 1.7;
+            margin-top: 0.5rem;
+        }
+        
+        .comment-form-card {
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .comment-form-card textarea {
+            border-radius: 12px;
+            border: 2px solid #e8ecef;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .comment-form-card textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+            color: white;
+        }
+        
+        .empty-comments {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #bdc3c7;
+        }
+        
+        .empty-comments i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: 0.5;
+        }
+        
+        .login-prompt {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .article-title {
+                font-size: 1.75rem;
+            }
+            
+            .article-meta-bar {
+                padding: 1rem;
+            }
+            
+            .meta-item {
+                font-size: 0.85rem;
+                margin-bottom: 0.5rem;
+            }
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5 mb-5">
-    <!-- 返回按钮 -->
-    <div class="mb-3">
-        <a href="/articles" class="btn btn-outline-secondary btn-sm">⬅ 返回列表</a>
-        <!-- 可选：如果是作者本人，可以显示编辑按钮 (需要后端传递 isAuthor 变量) -->
-        <!-- <a th:if="${isAuthor}" th:href="@{/article/edit/{id}(id=${article.id})}" class="btn btn-warning btn-sm float-end">✏️ 编辑</a> -->
+<!-- 顶部导航栏 -->
+<nav class="navbar navbar-dark navbar-custom">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/articles">
+            <i class="bi bi-journal-bookmark-fill me-2"></i>博客系统
+        </a>
+        <div class="d-flex">
+            <a href="/articles" class="back-btn">
+                <i class="bi bi-arrow-left"></i>返回列表
+            </a>
+        </div>
     </div>
+</nav>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white py-3">
-            <h2 class="mb-0 fw-bold" th:text="${article.title}">文章标题</h2>
+<!-- Hero 区域 -->
+<div class="article-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <h1 class="article-title mb-3" th:text="${article.title}">文章标题</h1>
+                
+                <!-- 分类和标签 -->
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge-custom badge-category">
+                        <i class="bi bi-folder me-1"></i>
+                        <span th:text="${article.category?.name ?: '未分类'}">分类</span>
+                    </span>
+                    <span th:if="${article.tags != null and !article.tags.isEmpty()}">
+                        <span th:each="tag : ${article.tags}" class="me-2">
+                            <a th:href="@{/articles?tag={name}(name=${tag.name})}"
+                               class="badge-custom badge-tag">
+                                <i class="bi bi-hash me-1"></i>
+                                <span th:text="${tag.name}">标签</span>
+                            </a>
+                        </span>
+                    </span>
+                </div>
+            </div>
         </div>
-        
-        <div class="mb-3">
-            <!-- 分类 -->
-            <span class="badge bg-primary me-2">
-                📂 <span th:text="${article.category?.name ?: '未分类'}">分类</span>
-            </span>
-            
-            <!-- 标签列表 -->
-            <span th:if="${article.tags != null and !article.tags.isEmpty()}">
-                <span th:each="tag : ${article.tags}" class="me-1">
-                    <a th:href="@{/articles?tag={name}(name=${tag.name})}" 
-                    class="badge bg-secondary text-decoration-none hover-badge"
-                    th:text="'#' + ${tag.name}">
-                    #标签
-                    </a>
-                </span>
-            </span>
-        </div>
+    </div>
+</div>
 
-        <div class="card-body p-0"> <!-- p-0 移除默认 padding，让 markdown-body 自己控制 -->
-            
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
             <!-- 文章元信息 -->
-            <div class="p-3 border-bottom bg-light">
-                <small class="text-muted">
-                    <span class="me-3">👤 作者：<strong th:text="${article.author}">作者</strong></span>
-                    <span class="me-3">📅 时间：<span th:text="${#dates.format(article.createTime, 'yyyy-MM-dd HH:mm')}">时间</span></span>
-                    <span>🔖 ID: <span th:text="${article.id}">ID</span></span>
-                </small>
-            </div>
-
-            <!-- 👇 核心修改区域 -->
-            <!-- 1. 添加 class="markdown-body" 以应用 GitHub 风格样式 -->
-            <!-- 2. 使用 th:utext 渲染 HTML，而不是 th:text -->
-            <!-- 3. 数据源改为 article.htmlContent (后端转好后的 HTML) -->
-            <div class="markdown-body" th:utext="${article.htmlContent}">
-                <!-- 如果 htmlContent 为空，这里会显示空白，确保后端已生成 HTML -->
-            </div>
-            <!-- 👆 核心修改区域结束 -->
-
-        </div>
-    </div>
-
-    <!-- 评论区域 -->
-    <div class="card shadow-sm mt-4">
-        <div class="card-header bg-light py-3">
-            <h5 class="mb-0">💬 评论 (<span th:text="${#lists.size(comments)}">0</span>)</h5>
-        </div>
-        <div class="card-body">
-            <!-- 评论成功提示 -->
-            <div th:if="${param.msg}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <span th:if="${param.msg[0] == 'comment_success'}">评论发表成功！</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-
-            <!-- 评论失败提示 -->
-            <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <span th:if="${param.error[0] == 'empty_comment'}">评论内容不能为空！</span>
-                <span th:if="${param.error[0] == 'comment_failed'}">评论失败，请重试。</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-
-            <!-- 评论列表 -->
-            <div th:if="${#lists.isEmpty(comments)}" class="text-center text-muted py-4">
-                <i class="bi bi-chat-square-text me-2"></i>暂无评论，快来抢沙发吧！
-            </div>
-
-            <div th:each="comment : ${comments}" class="comment-item">
-                <div class="d-flex">
-                    <!-- 头像 -->
-                    <div class="comment-avatar me-3 flex-shrink-0">
-                        <span th:text="${#strings.toUpperCase(#strings.substring(comment.user.nickname, 0, 1))}">U</span>
-                    </div>
-                    <!-- 评论内容 -->
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-primary" th:text="${comment.user.nickname}">用户名</strong>
-                            <small class="comment-meta">
-                                <i class="bi bi-clock me-1"></i>
-                                <span th:text="${#dates.format(comment.createTime, 'yyyy-MM-dd HH:mm')}">时间</span>
-                            </small>
+            <div class="article-meta-bar">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap gap-4">
+                            <div class="meta-item">
+                                <i class="bi bi-person-circle fs-5"></i>
+                                <div>
+                                    <small class="d-block text-muted">作者</small>
+                                    <strong th:text="${article.author}">作者</strong>
+                                </div>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-calendar3 fs-5"></i>
+                                <div>
+                                    <small class="d-block text-muted">发布时间</small>
+                                    <strong th:text="${article.createTime != null ? #dates.format(article.createTime, 'yyyy-MM-dd') : '暂无'}">时间</strong>
+                                </div>
+                            </div>
+                            <div class="meta-item">
+                                <i class="bi bi-clock fs-5"></i>
+                                <div>
+                                    <small class="d-block text-muted">具体时间</small>
+                                    <span th:text="${article.createTime != null ? #dates.format(article.createTime, 'HH:mm') : ''}">时间</span>
+                                </div>
+                            </div>
                         </div>
-                        <p class="mt-2 mb-0" th:text="${comment.content}">评论内容</p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <span class="text-muted">
+                            <i class="bi bi-hash me-1"></i>ID: <span th:text="${article.id}">ID</span>
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <!-- 发表评论表单（仅登录用户可见） -->
-            <div sec:authorize="isAuthenticated()" class="mt-4 pt-4 border-top">
-                <h6 class="mb-3">📝 发表评论</h6>
-                <form th:action="@{/article/{id}/comment/save(id=${article.id})}" method="post">
-                    <div class="mb-3">
-                        <textarea class="form-control" name="content" rows="3" 
-                                  placeholder="写下你的评论..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-send me-1"></i>发表评论
-                    </button>
-                </form>
+            <!-- 文章内容 -->
+            <div class="article-content-card mt-4 p-4 p-md-5">
+                <div class="markdown-body" th:utext="${article.htmlContent}">
+                    <!-- Markdown 渲染内容 -->
+                </div>
             </div>
 
-            <!-- 未登录提示 -->
-            <div sec:authorize="!isAuthenticated()" class="mt-4 pt-4 border-top text-center">
-                <p class="text-muted mb-2">💡 登录后即可发表评论</p>
-                <a href="/login" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-box-arrow-in-right me-1"></i>去登录
+            <!-- 评论区域 -->
+            <div class="comments-section">
+                <div class="comments-card">
+                    <div class="card-header bg-white border-0 py-4 px-4">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="bi bi-chat-dots me-2" style="color: #667eea;"></i>
+                            评论
+                            <span class="badge bg-primary ms-2" th:text="${#lists.size(comments)}">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        <!-- 评论成功提示 -->
+                        <div th:if="${param.msg}" class="alert alert-success alert-dismissible fade show border-0" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <span th:if="${param.msg[0] == 'comment_success'}">评论发表成功！</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- 评论失败提示 -->
+                        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show border-0" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <span th:if="${param.error[0] == 'empty_comment'}">评论内容不能为空！</span>
+                            <span th:if="${param.error[0] == 'comment_failed'}">评论失败，请重试。</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- 评论列表 -->
+                        <div th:if="${#lists.isEmpty(comments)}" class="empty-comments">
+                            <i class="bi bi-chat-square-text"></i>
+                            <p class="mb-0">暂无评论，快来抢沙发吧！</p>
+                        </div>
+
+                        <div th:each="comment : ${comments}" class="comment-item">
+                            <div class="d-flex gap-3">
+                                <!-- 头像 -->
+                                <div class="comment-avatar">
+                                    <span th:text="${#strings.toUpperCase(#strings.substring(comment.user.nickname, 0, 1))}">U</span>
+                                </div>
+                                <!-- 评论内容 -->
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="comment-author" th:text="${comment.user.nickname}">用户名</span>
+                                        <span class="comment-time">
+                                            <i class="bi bi-clock me-1"></i>
+                                            <span th:text="${#dates.format(comment.createTime, 'yyyy-MM-dd HH:mm')}">时间</span>
+                                        </span>
+                                    </div>
+                                    <p class="comment-content mb-0" th:text="${comment.content}">评论内容</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 发表评论表单（仅登录用户可见） -->
+                        <div sec:authorize="isAuthenticated()" class="comment-form-card">
+                            <h6 class="mb-3 fw-bold">
+                                <i class="bi bi-pencil-square me-2" style="color: #667eea;"></i>发表评论
+                            </h6>
+                            <form th:action="@{/article/{id}/comment/save(id=${article.id})}" method="post">
+                                <div class="mb-3">
+                                    <textarea class="form-control" name="content" rows="4"
+                                              placeholder="写下你的评论...（支持 Markdown 语法）" required></textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send me-2"></i>发表评论
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 未登录提示 -->
+                        <div sec:authorize="!isAuthenticated()" class="login-prompt">
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-lightbulb me-2"></i>登录后即可发表评论，与其他读者交流
+                            </p>
+                            <a href="/login" class="btn btn-primary">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>去登录
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作区 -->
+            <div class="text-center mt-5">
+                <a href="/articles" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-arrow-left me-2"></i>返回列表
                 </a>
             </div>
         </div>
     </div>
-
-    <!-- 底部操作区 -->
-    <div class="mt-4 text-center">
-        <a href="/articles" class="btn btn-primary px-4">⬅ 返回列表</a>
-    </div>
 </div>
 
-<!-- Bootstrap JS (可选，如果需要下拉菜单等交互) -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
