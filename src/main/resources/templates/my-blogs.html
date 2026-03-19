@@ -68,59 +68,41 @@
         .article-card {
             border: none;
             border-radius: 15px;
-            overflow: hidden;
+            overflow: visible;
             transition: all 0.3s ease;
             background: white;
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 1;
         }
-        
-        .article-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 5px;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s ease;
-        }
-        
+
         .article-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            z-index: 2;
         }
-        
-        .article-card:hover::before {
-            width: 100%;
-            opacity: 0.05;
+
+        .article-card .card-body {
+            background: white;
+            z-index: 3;
+            position: relative;
         }
-        
+
         .article-title-link {
             color: #2c3e50;
             font-weight: 700;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             transition: all 0.3s ease;
             text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
             position: relative;
+            z-index: 5;
         }
-        
-        .article-title-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s ease;
-        }
-        
+
         .article-title-link:hover {
             color: #667eea;
-        }
-        
-        .article-title-link:hover::after {
-            width: 100%;
+            text-decoration: none;
         }
         
         .article-meta {
@@ -145,6 +127,12 @@
         .action-btn-group {
             display: flex;
             gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn-group .btn {
+            position: relative;
+            z-index: 10;
         }
         
         .empty-state {
@@ -235,10 +223,10 @@
                         <a class="nav-link" href="/articles"><i class="bi bi-journal-text me-1"></i>博客列表</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i>个人中心
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item active" href="/article/my-blogs"><i class="bi bi-file-text me-2"></i>我的博客</a></li>
                             <li><a class="dropdown-item" href="/profile/change-password"><i class="bi bi-key me-2"></i>修改密码</a></li>
                             <li sec:authorize="hasRole('ADMIN')">
@@ -319,17 +307,17 @@
 
         <div th:each="article : ${articleList}" class="article-card card mb-4">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-9">
-                        <h5 class="mb-3">
+                <div class="row align-items-center">
+                    <div class="col-lg-9 col-md-8">
+                        <h5 class="mb-2">
                             <a th:href="@{/article/{id}(id=${article.id})}"
                                class="article-title-link"
                                th:text="${article.title}">
                                 标题
                             </a>
                         </h5>
-                        <p class="card-text text-muted mb-3" style="line-height: 1.8;">
-                            <span th:text="${#strings.abbreviate(article.content, 200)}">内容预览...</span>
+                        <p class="card-text text-muted mb-2">
+                            <span th:text="${#strings.abbreviate(article.content, 180)}">内容预览...</span>
                         </p>
                         <div class="article-meta">
                             <span class="meta-item">
@@ -338,23 +326,18 @@
                             </span>
                         </div>
                     </div>
-                    <div class="col-md-3 text-md-end mt-3 mt-md-0 d-flex flex-column justify-content-center align-items-md-end">
+                    <div class="col-lg-3 col-md-4">
                         <div class="action-btn-group">
-                            <a th:href="@{/article/{id}(id=${article.id})}"
-                               class="btn btn-outline-primary btn-sm"
-                               title="查看详情">
-                                <i class="bi bi-eye"></i>
-                            </a>
                             <a th:href="@{/article/edit/{id}(id=${article.id})}"
                                class="btn btn-outline-primary btn-sm"
                                title="编辑">
-                                <i class="bi bi-pencil-square"></i>
+                                <i class="bi bi-pencil-square me-1"></i> 编辑
                             </a>
                             <a th:href="@{/article/delete/{id}(id=${article.id})}"
                                class="btn btn-outline-danger btn-sm"
                                onclick="return confirm('⚠️ 确定要删除这篇文章吗？\n\n此操作不可恢复！');"
                                title="删除">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash me-1"></i> 删除
                             </a>
                         </div>
                     </div>

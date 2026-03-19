@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,5 +155,70 @@ public class ArticleService {
 
     public Article findById(@Nullable Long id) {
         return articleRepository.findById(id).orElse(null);
+    }
+
+    // ==================== 搜索功能 ====================
+
+    /**
+     * 综合搜索文章
+     * @param keyword 搜索关键词（标题、作者、内容）
+     * @param categoryId 分类 ID（可选）
+     * @param tagName 标签名称（可选）
+     * @return 搜索结果的文章列表
+     */
+    public List<Article> searchArticles(
+            @Nullable String keyword,
+            @Nullable Long categoryId,
+            @Nullable String tagName) {
+        
+        // 处理空字符串为 null
+        if (keyword != null && keyword.trim().isEmpty()) {
+            keyword = null;
+        }
+        if (tagName != null && tagName.trim().isEmpty()) {
+            tagName = null;
+        }
+        
+        return articleRepository.searchArticles(keyword, categoryId, tagName);
+    }
+
+    /**
+     * 按标题搜索
+     */
+    public List<Article> searchByTitle(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return getAllArticles();
+        }
+        return articleRepository.findByTitleContaining(keyword);
+    }
+
+    /**
+     * 按作者搜索
+     */
+    public List<Article> searchByAuthor(String keyword) {
+        if (!StringUtils.hasText(keyword)) {
+            return getAllArticles();
+        }
+        return articleRepository.findByAuthorContaining(keyword);
+    }
+
+    /**
+     * 按分类名称搜索
+     */
+    public List<Article> searchByCategoryName(String categoryName) {
+        if (!StringUtils.hasText(categoryName)) {
+            return getAllArticles();
+        }
+        return articleRepository.findByCategoryName(categoryName);
+    }
+
+    /**
+     * 按标签名称搜索
+     */
+    public List<Article> searchByTagName(String tagName) {
+        if (!StringUtils.hasText(tagName)) {
+            return getAllArticles();
+        }
+        return articleRepository.findByTagName(tagName);
     }
 }

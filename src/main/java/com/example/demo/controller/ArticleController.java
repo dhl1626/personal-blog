@@ -121,22 +121,68 @@ public class ArticleController {
     public String listArticles(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String keyword,
             Model model) {
 
         List<Article> articles;
-        if (categoryId != null) {
+        String searchTitle = null;
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 有搜索关键词，使用综合搜索
+            articles = articleService.searchArticles(keyword, categoryId, tag);
+            searchTitle = "搜索结果：" + keyword;
+        } else if (categoryId != null) {
+            // 按分类筛选
             articles = articleService.getArticlesByCategory(categoryId);
-            model.addAttribute("activeCategory", categoryId);
         } else if (tag != null) {
+            // 按标签筛选
             articles = articleService.getArticlesByTag(tag);
-            model.addAttribute("activeTag", tag);
         } else {
+            // 默认显示全部
             articles = articleService.getAllArticles();
         }
 
         model.addAttribute("categories", articleService.getAllCategories());
-        // model.addAttribute("hotTags", articleService.getHotTags(10)); // 确保 Service 有此方法
+        model.addAttribute("hotTags", articleService.getHotTags(20));
         model.addAttribute("articles", articles);
+        model.addAttribute("searchKeyword", keyword);
+        model.addAttribute("searchTitle", searchTitle);
+        model.addAttribute("activeCategory", categoryId);
+        model.addAttribute("activeTag", tag);
+
+        return "article-list";
+    }
+
+    // ================= 搜索功能 =================
+
+    /**
+     * 搜索文章（支持关键词、分类、标签）
+     * 路径：GET /article/search
+     */
+    @GetMapping("/search")
+    public String searchArticles(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String tag,
+            Model model) {
+        
+        // 如果没有搜索条件，重定向到列表页
+        if ((keyword == null || keyword.trim().isEmpty()) && 
+            categoryId == null && 
+            (tag == null || tag.trim().isEmpty())) {
+            return "redirect:/article/list";
+        }
+
+        List<Article> articles = articleService.searchArticles(keyword, categoryId, tag);
+        
+        model.addAttribute("articles", articles);
+        model.addAttribute("categories", articleService.getAllCategories());
+        model.addAttribute("hotTags", articleService.getHotTags(20));
+        model.addAttribute("searchKeyword", keyword);
+        model.addAttribute("activeCategory", categoryId);
+        model.addAttribute("activeTag", tag);
+        model.addAttribute("searchTitle", keyword != null ? "搜索结果：" + keyword : "筛选结果");
+        model.addAttribute("searchResultCount", articles.size());
 
         return "article-list";
     }

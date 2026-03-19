@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.Article;
 import com.example.demo.entity.Comment;
+import com.example.demo.service.ArticleService;
 import com.example.demo.service.CommentService;
 import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.UserRepository;
@@ -21,19 +22,20 @@ public class BlogController {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final CommentService commentService;
+    private final ArticleService articleService;
 
-    public BlogController(ArticleRepository articleRepository, UserRepository userRepository, CommentService commentService) {
+    public BlogController(ArticleRepository articleRepository, UserRepository userRepository, 
+                         CommentService commentService, ArticleService articleService) {
         this.articleRepository = articleRepository;
         this.userRepository = userRepository;
         this.commentService = commentService;
+        this.articleService = articleService;
     }
 
-    // 1. 列表页
+    // 1. 列表页 - 重定向到新的文章列表路径
     @GetMapping("/articles")
-    public String articleList(Model model) {
-        List<Article> articles = articleRepository.findAll();
-        model.addAttribute("articleList", articles);
-        return "article-list";
+    public String articleList() {
+        return "redirect:/article/list";
     }
 
     // 2. 详情页
@@ -44,11 +46,11 @@ public class BlogController {
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
 
         model.addAttribute("article", article);
-        
+
         // 加载评论列表
         List<Comment> comments = commentService.getCommentsByArticle(id);
         model.addAttribute("comments", comments);
-        
+
         // 当前登录用户（用于显示评论表单）
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             model.addAttribute("currentUsername", authentication.getName());
@@ -64,7 +66,7 @@ public class BlogController {
         return "article-form";
     }
 
-    /* 
+    /*
      * 以下为保存文章的逻辑（当前被注释）
      * 若需启用，请取消本块代码及顶部相关 import 和字段注入的注释
      */
@@ -89,7 +91,7 @@ public class BlogController {
 
         // 查询当前用户
         User author = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new RuntimeException("用户不存在: " + currentUsername));
+                .orElseThrow(() -> new RuntimeException("用户不存在：" + currentUsername));
 
         // 创建文章
         Article article = new Article();
