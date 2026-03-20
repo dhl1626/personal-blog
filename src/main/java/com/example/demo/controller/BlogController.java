@@ -8,13 +8,17 @@ import com.example.demo.repository.ArticleRepository;
 import com.example.demo.repository.UserRepository;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.lang.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 public class BlogController {
@@ -109,4 +113,21 @@ public class BlogController {
         return "redirect:/articles";
     }
     */
+
+    // 调试接口：查看当前登录用户的权限信息
+    @GetMapping("/debug/auth")
+    @ResponseBody
+    public Map<String, Object> debugAuth(Authentication authentication) {
+        Map<String, Object> result = new HashMap<>();
+        if (authentication != null && !"anonymousUser".equals(authentication.getName())) {
+            result.put("username", authentication.getName());
+            result.put("authorities", authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList());
+            result.put("isAuthenticated", authentication.isAuthenticated());
+        } else {
+            result.put("error", "未登录");
+        }
+        return result;
+    }
 }

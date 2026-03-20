@@ -71,4 +71,44 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
      */
     @Query("SELECT DISTINCT a FROM Article a JOIN a.tags t WHERE t.name = :tagName ORDER BY a.createTime DESC")
     List<Article> findByTagName(@Param("tagName") String tagName);
+    
+    // ==================== 统计功能 ====================
+    
+    /**
+     * 统计文章总数
+     */
+    @Query("SELECT COUNT(a) FROM Article a")
+    Long countTotalArticles();
+    
+    /**
+     * 统计总访问量（需要先在 Article 实体中添加 views 字段）
+     */
+    @Query("SELECT COALESCE(SUM(a.views), 0) FROM Article a")
+    Long countTotalViews();
+    
+    /**
+     * 查询最近 N 篇文章
+     */
+    @Query("SELECT a FROM Article a ORDER BY a.createTime DESC")
+    List<Article> findRecentArticles(org.springframework.data.domain.Pageable pageable);
+    
+    /**
+     * 查询最热门的 N 篇文章（按访问量）
+     */
+    @Query("SELECT a FROM Article a ORDER BY a.views DESC")
+    List<Article> findPopularArticles(org.springframework.data.domain.Pageable pageable);
+    
+    /**
+     * 统计每个分类的文章数量
+     */
+    @Query("SELECT new com.example.demo.dto.AdminDashboardDTO$CategoryStat(c.id, c.name, COUNT(a.id)) " +
+           "FROM Category c LEFT JOIN Article a ON c.id = a.category.id GROUP BY c.id, c.name")
+    List<com.example.demo.dto.AdminDashboardDTO.CategoryStat> countArticlesByCategory();
+    
+    /**
+     * 统计每个标签的文章数量
+     */
+    @Query("SELECT new com.example.demo.dto.AdminDashboardDTO$TagStat(t.id, t.name, CAST(SIZE(t.articles) AS long)) " +
+           "FROM Tag t ORDER BY SIZE(t.articles) DESC")
+    List<com.example.demo.dto.AdminDashboardDTO.TagStat> countArticlesByTag();
 }

@@ -28,6 +28,18 @@ public class Article {
 
     // 渲染后的 HTML 内容
     private String htmlContent;
+    
+    // 访问量
+    @Column(nullable = false)
+    private Integer views = 0;
+    
+    // 文章状态：published-已发布，draft-草稿，archived-已归档
+    @Column(nullable = false, length = 20)
+    private String status = "published";
+    
+    // 排序序号（用于拖拽排序）
+    @Column(nullable = false)
+    private Integer sortOrder = 0;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -175,5 +187,36 @@ public class Article {
     public void removeComment(Comment comment) {
         this.comments.remove(comment);
         comment.setArticle(null);
+    }
+    
+    public Integer getViews() {
+        return views;
+    }
+    
+    public void setViews(Integer views) {
+        this.views = views;
+    }
+    
+    public void incrementViews() {
+        if (this.views == null) {
+            this.views = 0;
+        }
+        this.views++;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+    
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

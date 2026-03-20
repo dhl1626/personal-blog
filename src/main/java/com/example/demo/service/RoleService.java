@@ -111,8 +111,15 @@ public class RoleService {
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new RuntimeException("角色不存在"));
-        user.addRole(role);
-        userRepository.save(user);
+        
+        // 检查角色是否已存在，避免重复添加
+        boolean hasRole = user.getRoles().stream()
+                .anyMatch(r -> r.getId().equals(roleId));
+        
+        if (!hasRole) {
+            user.addRole(role);
+            userRepository.save(user);
+        }
     }
 
     @Transactional

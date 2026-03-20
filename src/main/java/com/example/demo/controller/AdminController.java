@@ -22,10 +22,35 @@ public class AdminController {
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private com.example.demo.repository.UserRepository userRepository;
+
     // ==================== 管理后台首页 ====================
     @GetMapping("")
     public String adminDashboard() {
-        return "redirect:/admin/roles";
+        return "redirect:/admin/dashboard";
+    }
+    
+    // ==================== 数据看板 ====================
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_EDITOR')")
+    public String dashboard(Authentication authentication, Model model) {
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByUsernameWithRoles(currentUsername).orElse(null);
+        model.addAttribute("currentUser", currentUser);
+        return "admin/dashboard";
+    }
+
+    // ==================== 文章管理 ====================
+
+    @GetMapping("/articles")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_EDITOR')")
+    public String articleList(Authentication authentication, Model model) {
+        String currentUsername = authentication.getName();
+        User currentUser = userRepository.findByUsernameWithRoles(currentUsername).orElse(null);
+        model.addAttribute("currentUser", currentUser);
+        return "admin/article-list";
     }
 
     // ==================== 角色管理 ====================
@@ -116,21 +141,20 @@ public class AdminController {
     }
 
     // ==================== 用户管理 ====================
-    
-    @Autowired
-    private com.example.demo.repository.UserRepository userRepository;
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String userList(Model model) {
         List<Role> roles = roleService.getAllRoles();
-        model.addAttribute("users", userRepository.findAll());
+        // 使用 FETCH JOIN 确保角色列表被加载
+        List<User> users = userRepository.findAllWithRoles();
+        model.addAttribute("users", users);
         model.addAttribute("roles", roles);
         return "admin/user-list";
     }
 
     @PostMapping("/users/assign-role")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String assignRole(
             @RequestParam Long userId,
             @RequestParam Long roleId,
@@ -145,25 +169,29 @@ public class AdminController {
     }
 
     // ==================== 管理员设置 ====================
-    
+
     @GetMapping("/promote")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public String promotePage(Model model, Authentication authentication) {
         String currentUsername = authentication.getName();
-        User currentUser = userRepository.findByUsername(currentUsername).orElse(null);
+        User currentUser = userRepository.findByUsernameWithRoles(currentUsername).orElse(null);
         Long currentUserId = currentUser != null ? currentUser.getId() : null;
         
         // 获取管理员角色
         Role adminRole = roleService.getRoleByName("ROLE_ADMIN");
         
-        // 获取所有管理员
+        // 获取所有管理员（使用 FETCH JOIN 确保角色被加载）
         List<User> admins = new ArrayList<>();
         if (adminRole != null) {
-            admins = adminRole.getUsers();
+            admins = userRepository.findAllWithRoles();
+            admins = admins.stream()
+                    .filter(u -> u.getRoles().stream()
+                            .anyMatch(r -> "ROLE_ADMIN".equals(r.getName())))
+                    .collect(java.util.stream.Collectors.toList());
         }
         
-        // 获取所有非管理员用户
-        List<User> allUsers = userRepository.findAll();
+        // 获取所有非管理员用户（使用 FETCH JOIN 确保角色被加载）
+        List<User> allUsers = userRepository.findAllWithRoles();
         List<User> normalUsers = new ArrayList<>();
         for (User user : allUsers) {
             boolean isAdmin = user.getRoles().stream()

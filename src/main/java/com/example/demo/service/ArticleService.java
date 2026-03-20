@@ -17,6 +17,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Date;
 import java.util.Optional;
+import java.text.SimpleDateFormat;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.example.demo.dto.AdminDashboardDTO;
+import com.example.demo.repository.CommentRepository;
+import com.example.demo.repository.UserRepository;
 
 @Service
 public class ArticleService {
@@ -29,6 +36,14 @@ public class ArticleService {
 
     @Autowired
     private TagRepository tagRepository;
+    
+    @Autowired
+    private CommentRepository commentRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     public List<Article> getAllArticles() {
         return articleRepository.findAll();
@@ -220,5 +235,142 @@ public class ArticleService {
             return getAllArticles();
         }
         return articleRepository.findByTagName(tagName);
+    }
+    
+    // ==================== 后台管理功能 ====================
+    
+    /**
+     * 获取管理看板数据
+     */
+    public AdminDashboardDTO getDashboardData() {
+        AdminDashboardDTO dto = new AdminDashboardDTO();
+        
+        // 统计总数
+        dto.setTotalArticles(articleRepository.countTotalArticles());
+        dto.setTotalViews(articleRepository.countTotalViews());
+        dto.setTotalComments(commentRepository.count());
+        dto.setTotalUsers(userRepository.count());
+        
+        // 最近文章
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Article> recentArticles = articleRepository.findRecentArticles(pageable);
+        dto.setRecentArticles(convertToArticleInfo(recentArticles));
+        
+        // 热门文章
+        List<Article> popularArticles = articleRepository.findPopularArticles(pageable);
+        dto.setPopularArticles(convertToArticleInfo(popularArticles));
+        
+        // 分类统计
+        dto.setCategoryStats(articleRepository.countArticlesByCategory());
+        
+        // 标签统计
+        dto.setTagStats(articleRepository.countArticlesByTag());
+        
+        // 访问趋势（模拟数据，实际项目可记录访问日志）
+        dto.setViewTrend(generateViewTrend());
+        
+        return dto;
+    }
+    
+    /**
+     * 转换文章列表为 ArticleInfo
+     */
+    private List<AdminDashboardDTO.ArticleInfo> convertToArticleInfo(List<Article> articles) {
+        List<AdminDashboardDTO.ArticleInfo> result = new ArrayList<>();
+        for (Article article : articles) {
+            AdminDashboardDTO.ArticleInfo info = new AdminDashboardDTO.ArticleInfo();
+            info.setId(article.getId());
+            info.setTitle(article.getTitle());
+            info.setAuthor(article.getAuthor());
+            info.setViews(article.getViews() != null ? article.getViews() : 0);
+            info.setComments(article.getComments() != null ? article.getComments().size() : 0);
+            info.setCreateTime(dateFormat.format(article.getCreateTime()));
+            info.setStatus(article.getStatus() != null ? article.getStatus() : "published");
+            result.add(info);
+        }
+        return result;
+    }
+    
+    /**
+     * 生成访问趋势数据（最近 7 天）
+     */
+    private List<java.util.Map<String, Object>> generateViewTrend() {
+        List<java.util.Map<String, Object>> trend = new ArrayList<>();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        java.util.Random random = new java.util.Random();
+        
+        for (int i = 6; i >= 0; i--) {
+            cal.add(java.util.Calendar.DAY_OF_MONTH, -1);
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("date", new SimpleDateFormat("MM-dd").format(cal.getTime()));
+            // 模拟数据：基础值 + 随机波动
+            data.put("views", 50 + random.nextInt(100));
+            trend.add(data);
+        }
+        return trend;
+    }
+    
+    /**
+     * 批量删除文章
+     */
+    @Transactional
+    public void batchDeleteArticles(List<Long> ids) {
+        articleRepository.deleteAllById(ids);
+    }
+    
+    /**
+     * 批量发布文章
+     */
+    @Transactional
+    public void batchPublish(List<Long> ids) {
+        for (Long id : ids) {
+            Article article = articleRepository.findById(id).orElse(null);
+            if (article != null) {
+                article.setStatus("published");
+                articleRepository.save(article);
+            }
+        }
+    }
+    
+    /**
+     * 批量下架文章
+     */
+    @Transactional
+    public void batchArchive(List<Long> ids) {
+        for (Long id : ids) {
+            Article article = articleRepository.findById(id).orElse(null);
+            if (article != null) {
+                article.setStatus("archived");
+                articleRepository.save(article);
+            }
+        }
+    }
+    
+    /**
+     * 更新文章排序
+     */
+    @Transactional
+    public void updateSortOrder(List<Long> ids) {
+        for (int i = 0; i < ids.size(); i++) {
+            Article article = articleRepository.findById(ids.get(i)).orElse(null);
+            if (article != null) {
+                article.setSortOrder(i);
+                articleRepository.save(article);
+            }
+        }
+    }
+    
+    /**
+     * 获取所有文章（含分页和排序）
+     */
+    public List<Article> getAllArticlesWithSort() {
+        List<Article> articles = articleRepository.findAll();
+        articles.sort((a1, a2) -> {
+            int sortCompare = Integer.compare(a1.getSortOrder() != null ? a1.getSortOrder() : 0, 
+                                               a2.getSortOrder() != null ? a2.getSortOrder() : 0);
+            if (sortCompare != 0) return sortCompare;
+            return a2.getCreateTime().compareTo(a1.getCreateTime());
+        });
+        return articles;
     }
 }
